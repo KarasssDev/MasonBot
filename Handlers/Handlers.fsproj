@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Content.fs" />
+        <Compile Include="Callback.fs" />
+        <Compile Include="Basic.fs" />
+        <Compile Include="StartHanler.fs" />
+        <Compile Include="MainHandler.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Funogram" Version="2.0.5" />
+      <PackageReference Include="Funogram.Telegram" Version="6.2.0" />
+      <PackageReference Update="FSharp.Core" Version="6.0.6" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Logging\Logging.fsproj" />
+      <ProjectReference Include="..\MasonCore\MasonCore.fsproj" />
+    </ItemGroup>
+
+</Project>
