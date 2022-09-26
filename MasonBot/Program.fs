@@ -9,13 +9,26 @@ open Logging
 
 module Program =
 
+    let startBot () =
+        try
+            async {
+                let config = {Config.defaultConfig with Token = Content.token}
+                let! _ = Api.deleteWebhookBase () |> api config
+                return! startBot config MainHandler.updateArrived None
+            } |> Async.RunSynchronously
+            0
+        with
+            | :? System.Exception as _ ->
+                Logging.logError "Invalid telegram API token"
+                1
+    
     [<EntryPoint>]
     let main _ =
 
         #if DEBUG
-        Paths.configureDataPath "/home/viktor/RiderProjects/MasonBot/data/"
-        Paths.configureLogPath "/home/viktor/RiderProjects/MasonBot/logs/"
-        Paths.configureSecretsPath "/home/viktor/RiderProjects/MasonBot/secrets/"
+        Paths.configureDataPath ""
+        Paths.configureLogPath ""
+        Paths.configureSecretsPath ""
         Logging.configureWriter System.Console.Out
         Logging.configureLogLevel Logging.Debug
         #endif
@@ -26,14 +39,5 @@ module Program =
 
         if readyToStart then
             Logging.logInfo "Bot started"
-            async {
-              let config = {Config.defaultConfig with Token = "5474863531:AAEPxvze9nq9efNfwPbWu9DHKP9043VFtTw"}
-              let! _ = Api.deleteWebhookBase () |> api config
-              return! startBot config MainHandler.updateArrived None
-            } |> Async.RunSynchronously
-            0
+            startBot ()
         else 1
-
-
-
-
