@@ -1,11 +1,8 @@
-open Funogram.Api
-open Funogram.Telegram
-open Funogram.Telegram.Bot
-
 open Handlers
 open Database
 open MasonCore
 open Logging
+open BotLauncher
 
 module Program =
 
@@ -13,9 +10,9 @@ module Program =
     let main _ =
 
         #if DEBUG
-        Paths.configureDataPath "/home/viktor/RiderProjects/MasonBot/data/"
-        Paths.configureLogPath "/home/viktor/RiderProjects/MasonBot/logs/"
-        Paths.configureSecretsPath "/home/viktor/RiderProjects/MasonBot/secrets/"
+        Paths.configureDataPath ""
+        Paths.configureLogPath ""
+        Paths.configureSecretsPath ""
         Logging.configureWriter System.Console.Out
         Logging.configureLogLevel Logging.Debug
         #endif
@@ -26,14 +23,5 @@ module Program =
 
         if readyToStart then
             Logging.logInfo "Bot started"
-            async {
-              let config = {Config.defaultConfig with Token = "5474863531:AAEPxvze9nq9efNfwPbWu9DHKP9043VFtTw"}
-              let! _ = Api.deleteWebhookBase () |> api config
-              return! startBot config MainHandler.updateArrived None
-            } |> Async.RunSynchronously
-            0
+            BotLauncher.startBot ()
         else 1
-
-
-
-
