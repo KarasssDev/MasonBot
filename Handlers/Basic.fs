@@ -99,3 +99,10 @@ module Basic =
       sendMessage chatId (text, parseMode) None None config
     let sendMarkdown text = sendMessageFormatted text ParseMode.Markdown
     let sendHtml text = sendMessageFormatted text ParseMode.HTML
+
+    // Logging
+    let logMessage handlerName userId message =
+        Logging.logInfo $"Handler[{handlerName}] process message[{message}] from user[{userId}]"
+
+    let logCallback handlerName userId callbackData =
+        Logging.logInfo $"Handler[{handlerName}] process callback[{callbackData}] from user[{userId}]"
