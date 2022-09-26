@@ -8,7 +8,7 @@ open Handlers.Callback
 open Handlers.Content
 open Logging.Logging
 
-module StartHandler =
+module StaticContentHandlers =
 
     let keyboard = createInlineKeyboard [|
         [| ("Как стать масоном?", HowToMason) |]
@@ -36,7 +36,7 @@ module StartHandler =
         let handlingCallback = HowToMason
         let handlerName = "How to Mason"
 
-        match (matchCallbackMessage handlingCallback ctx) with
+        match (matchSimpleCallbackMessage handlingCallback ctx) with
         | Some from ->
             logCallback handlerName from.Id handlingCallback
             sendMessage from.Id
@@ -52,7 +52,7 @@ module StartHandler =
         let handlingCallback = WhatIsMason
         let handlerName = "What is Mason"
 
-        match (matchCallbackMessage handlingCallback ctx) with
+        match (matchSimpleCallbackMessage handlingCallback ctx) with
         | Some from ->
             logCallback handlerName from.Id handlingCallback
             sendMessage from.Id

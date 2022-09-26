@@ -8,9 +8,9 @@ module MainHandler =
 
     let updateArrived (ctx: UpdateContext) =
         match Basic.processHandlers [
-            StartHandler.handleStart
-            StartHandler.handleHowToMason
-            StartHandler.handleWhatIsMason
+            StaticContentHandlers.handleStart
+            StaticContentHandlers.handleHowToMason
+            StaticContentHandlers.handleWhatIsMason
         ] ctx with
         | Basic.Success -> ()
         | Basic.Fail ->

@@ -17,7 +17,7 @@ module Basic =
             if text = expectedText then Some chat else None
         | _ -> None
 
-    let matchCallbackMessage expectedCallback ctx =
+    let matchSimpleCallbackMessage expectedCallback ctx =
         let callback = ctx.Update.CallbackQuery
         match callback with
         | Some { Data = Some data; From = from} ->
