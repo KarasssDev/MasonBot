@@ -36,9 +36,3 @@ module Logging =
     let public logWarning format = printLog Warning format
     let public logInfo format = printLog Info format
     let public logDebug format = printLog Debug format
-
-    let logMessage handlerName userId message =
-        logInfo $"Handler[{handlerName}] process message[{message}] from user[{userId}]"
-
-    let logCallback handlerName userId callbackData =
-        logInfo $"Handler[{handlerName}] process callback[{callbackData}] from user[{userId}]"
