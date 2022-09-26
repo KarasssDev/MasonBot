@@ -11,6 +11,9 @@ module MainHandler =
             StaticContentHandlers.handleStart
             StaticContentHandlers.handleHowToMason
             StaticContentHandlers.handleWhatIsMason
+            StaticContentHandlers.handleBuyTon
+            StaticContentHandlers.handleAboutNFT
+            StaticContentHandlers.handleBuyMasonNFT
         ] ctx with
         | Basic.Success -> ()
         | Basic.Fail ->

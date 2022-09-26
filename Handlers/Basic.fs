@@ -21,7 +21,7 @@ module Basic =
         let callback = ctx.Update.CallbackQuery
         match callback with
         | Some { Data = Some data; From = from} ->
-            let content = Callback.string2CallbackContent data
+            let content = Callback.string2SimpleCallbackContent data
             match content with
             | Some callbackData ->
                 if callbackData = expectedCallback then Some from else None
