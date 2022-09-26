@@ -16,7 +16,7 @@ module Content =
 
     let uploadStaticContent () =
         try
-            token <- File.ReadAllText($"{Paths.telegramToken()}")
+            token <- File.ReadAllText($"{Paths.telegramToken()}").Trim()
             logFileWriter <- new StreamWriter(Paths.logFilePath())
             welcomeMessage <- File.ReadAllText($"{Paths.staticContentPath()}welcomeMessage.txt")
             howToMasonMessage <- File.ReadAllText($"{Paths.staticContentPath()}howToMasonMessage.txt")
