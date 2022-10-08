@@ -53,3 +53,6 @@ module Helpers =
         Content.welcomeMessage <- "welcomeMessage"
         Content.howToMasonMessage <- "howToMasonMessage"
         Content.whatIsMasonMessage <- "whatIsMasonMessage"
+        Content.aboutNftMessage <- "aboutNftMessage"
+        Content.buyTonMessage <- "buyTonMessage"
+        Content.buyMasonNftMessage <- "buyMasonNftMessage"

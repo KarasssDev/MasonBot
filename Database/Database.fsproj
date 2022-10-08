@@ -8,6 +8,8 @@
 
     <ItemGroup>
         <Compile Include="Connection.fs" />
+        <Compile Include="DbQuerying.fs" />
+        <Compile Include="Migrations/*" />
     </ItemGroup>
 
     <ItemGroup>
@@ -16,5 +18,9 @@
       <PackageReference Include="System.Data.SQLite" Version="1.0.116" />
       <PackageReference Include="System.Data.SQLite.Core" Version="1.0.116" />
       <PackageReference Update="FSharp.Core" Version="6.0.6" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\MasonCore\MasonCore.fsproj" />
     </ItemGroup>
 </Project>
