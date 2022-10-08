@@ -9,7 +9,7 @@
         <Compile Include="Content.fs" />
         <Compile Include="Callback.fs" />
         <Compile Include="Basic.fs" />
-        <Compile Include="StartHanler.fs" />
+        <Compile Include="StartHandler.fs" />
         <Compile Include="MainHandler.fs" />
     </ItemGroup>
 
@@ -22,6 +22,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Logging\Logging.fsproj" />
       <ProjectReference Include="..\MasonCore\MasonCore.fsproj" />
+      <ProjectReference Include="..\TonAPI\TonAPI.fsproj" />
     </ItemGroup>
 
 </Project>
