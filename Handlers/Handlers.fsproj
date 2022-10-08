@@ -24,6 +24,7 @@
       <ProjectReference Include="..\Database\Database.fsproj" />
       <ProjectReference Include="..\Logging\Logging.fsproj" />
       <ProjectReference Include="..\MasonCore\MasonCore.fsproj" />
+      <ProjectReference Include="..\TonAPI\TonAPI.fsproj" />
     </ItemGroup>
 
 </Project>
