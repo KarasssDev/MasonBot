@@ -10,9 +10,9 @@ module Program =
     let main _ =
 
         #if DEBUG
-        Paths.configureDataPath "/home/viktor/RiderProjects/MasonBot/data/"
-        Paths.configureLogPath "/home/viktor/RiderProjects/MasonBot/logs/"
-        Paths.configureSecretsPath "/home/viktor/RiderProjects/MasonBot/secrets/"
+        Paths.configureDataPath ""
+        Paths.configureLogPath ""
+        Paths.configureSecretsPath ""
         Logging.configureWriter System.Console.Out
         Logging.configureLogLevel Logging.Debug
         #endif
