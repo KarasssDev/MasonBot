@@ -1,7 +1,9 @@
 namespace Handlers
 
 open Database
+open Funogram.Telegram.Types
 open MasonCore
+open TonApi
 
 module Querying =
 
@@ -36,14 +38,39 @@ module Querying =
         | [] -> Error errorEmpty
         | _ -> Ok lst
 
-    let getUser telegramId =
+    // Users
+    let getAllUsers () =
+        use ctx = new Connection.MasonDbContext()
+        DbQuerying.getAllUsers ctx |> Set
+
+    let getUser (telegramId: int64) =
         use ctx = new Connection.MasonDbContext()
         result {
             let! user = DbQuerying.getUser ctx telegramId |> oneOf UserNotFound UnexpectedError
-            let! nftCount = Ok 10 // Api call here
-            return UserTypes.mkUser user.TelegramId nftCount user.Wallet
+            match user.Wallet with
+            | Some w ->
+                let! nftCount = TonApiQuerying.getNftsCount w |> toApiError
+                return UserTypes.mkUser user.TelegramId (Some nftCount) user.Wallet
+            | None ->
+                return UserTypes.mkUser user.TelegramId None user.Wallet
         }
 
+    let createUser telegramId wallet =
+        use ctx = new Connection.MasonDbContext()
+        DbQuerying.createUser ctx telegramId wallet
 
+    let updateUserWallet telegramId wallet =
+        use ctx = new Connection.MasonDbContext()
+        result {
+            let! user = DbQuerying.getUser ctx telegramId |> oneOf UserNotFound UnexpectedError
+            return DbQuerying.updateUserWallet ctx user wallet
+        }
+
+    // Statistic
+    let getStatistic formatter =
+        result {
+            let! rawStatistic = TonApiQuerying.getStatistics () |> toApiError
+            return formatter rawStatistic
+        }
 
 

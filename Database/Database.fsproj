@@ -21,6 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Logging\Logging.fsproj" />
       <ProjectReference Include="..\MasonCore\MasonCore.fsproj" />
     </ItemGroup>
 </Project>

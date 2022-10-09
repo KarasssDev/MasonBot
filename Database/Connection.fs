@@ -11,34 +11,39 @@ module Connection =
 
     [<CLIMutable>]
     type User = {
-        [<Key>] TelegramId: int
+        [<Key>] TelegramId: int64
         Wallet: string option
     }
 
     [<CLIMutable>]
     type Voting = {
-        [<Key>] Id: int
+        [<Key>] Id: Guid
         Creator: User
         Description: string
         StartDate: DateTime
-        Duration: DateTime
+        Duration: TimeSpan
     }
 
     [<CLIMutable>]
     type Variant = {
-        [<Key>] Id: int
+        [<Key>] Id: Guid
         Description: string
         Voting: Voting
     }
 
     [<CLIMutable>]
     type Vote = {
-        [<Key>] Id: int
+        [<Key>] Id: Guid
         Variant: Variant
         NftAddress: string
     }
 
-
+    [<CLIMutable>]
+    type Result = {
+        [<Key>] Id: Guid
+        Variant: Variant
+        Count: int
+    }
 
     type MasonDbContext() =
         inherit DbContext()
@@ -54,6 +59,8 @@ module Connection =
 
         [<DefaultValue>] val mutable votes : DbSet<Vote>
         member this.Votes with get() = this.votes and set v = this.votes <- v
+        [<DefaultValue>] val mutable results: DbSet<Result>
+        member this.Results with get() = this.results and set v = this.results <- v
 
 
         override _.OnModelCreating builder =

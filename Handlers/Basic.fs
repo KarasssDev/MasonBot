@@ -7,6 +7,7 @@ open Funogram.Telegram.Types
 open Funogram.Telegram.Bot
 
 open Logging
+open MasonCore
 
 module Basic =
 
@@ -106,3 +107,13 @@ module Basic =
 
     let logCallback handlerName userId callbackData =
         Logging.logInfo $"Handler[{handlerName}] process callback[{callbackData}] from user[{userId}]"
+
+    let logAccessDenied handlerName userId =
+        Logging.logInfo $"Access to handler[{handlerName}] denied for user[{userId}]"
+
+    // Error handling
+    let defaultHandleQueryingError err userId =
+        match err with
+        | Querying.ApiError -> ()
+        | Querying.UnexpectedError -> ()
+        | Querying.UserNotFound -> ()

@@ -16,16 +16,45 @@ type MasonDbContextModelSnapshot() =
     override this.BuildModel(modelBuilder: ModelBuilder) =
         modelBuilder.HasAnnotation("ProductVersion", "6.0.9") |> ignore
 
+        modelBuilder.Entity("Database.Connection+Result", (fun b ->
+
+            b.Property<Guid>("Id")
+                .IsRequired(true)
+                .ValueGeneratedOnAdd()
+                .HasColumnType("TEXT")
+                |> ignore
+
+            b.Property<int>("Count")
+                .IsRequired(true)
+                .HasColumnType("INTEGER")
+                |> ignore
+
+            b.Property<Nullable<Guid>>("VariantId")
+                .IsRequired(false)
+                .HasColumnType("TEXT")
+                |> ignore
+
+            b.HasKey("Id")
+                |> ignore
+
+
+            b.HasIndex("VariantId")
+                |> ignore
+
+            b.ToTable("Results") |> ignore
+
+        )) |> ignore
+
         modelBuilder.Entity("Database.Connection+User", (fun b ->
 
-            b.Property<int>("TelegramId")
+            b.Property<Int64>("TelegramId")
                 .IsRequired(true)
                 .ValueGeneratedOnAdd()
                 .HasColumnType("INTEGER")
                 |> ignore
 
-            b.Property<string>("Wallet")
-                .IsRequired(true)
+            b.Property<string option>("Wallet")
+                .IsRequired(false)
                 .HasColumnType("TEXT")
                 |> ignore
 
@@ -39,10 +68,10 @@ type MasonDbContextModelSnapshot() =
 
         modelBuilder.Entity("Database.Connection+Variant", (fun b ->
 
-            b.Property<int>("Id")
+            b.Property<Guid>("Id")
                 .IsRequired(true)
                 .ValueGeneratedOnAdd()
-                .HasColumnType("INTEGER")
+                .HasColumnType("TEXT")
                 |> ignore
 
             b.Property<string>("Description")
@@ -50,9 +79,9 @@ type MasonDbContextModelSnapshot() =
                 .HasColumnType("TEXT")
                 |> ignore
 
-            b.Property<Nullable<int>>("VotingId")
+            b.Property<Nullable<Guid>>("VotingId")
                 .IsRequired(false)
-                .HasColumnType("INTEGER")
+                .HasColumnType("TEXT")
                 |> ignore
 
             b.HasKey("Id")
@@ -68,32 +97,23 @@ type MasonDbContextModelSnapshot() =
 
         modelBuilder.Entity("Database.Connection+Vote", (fun b ->
 
-            b.Property<int>("Id")
+            b.Property<Guid>("Id")
                 .IsRequired(true)
                 .ValueGeneratedOnAdd()
-                .HasColumnType("INTEGER")
+                .HasColumnType("TEXT")
                 |> ignore
 
-            b.Property<string>("Description")
+            b.Property<string>("NftAddress")
                 .IsRequired(true)
                 .HasColumnType("TEXT")
                 |> ignore
 
-            b.Property<Nullable<int>>("UserTelegramId")
+            b.Property<Nullable<Guid>>("VariantId")
                 .IsRequired(false)
-                .HasColumnType("INTEGER")
-                |> ignore
-
-            b.Property<Nullable<int>>("VariantId")
-                .IsRequired(false)
-                .HasColumnType("INTEGER")
+                .HasColumnType("TEXT")
                 |> ignore
 
             b.HasKey("Id")
-                |> ignore
-
-
-            b.HasIndex("UserTelegramId")
                 |> ignore
 
 
@@ -106,18 +126,28 @@ type MasonDbContextModelSnapshot() =
 
         modelBuilder.Entity("Database.Connection+Voting", (fun b ->
 
-            b.Property<int>("Id")
+            b.Property<Guid>("Id")
                 .IsRequired(true)
                 .ValueGeneratedOnAdd()
-                .HasColumnType("INTEGER")
+                .HasColumnType("TEXT")
                 |> ignore
 
-            b.Property<Nullable<int>>("CreatorTelegramId")
+            b.Property<Nullable<Int64>>("CreatorTelegramId")
                 .IsRequired(false)
                 .HasColumnType("INTEGER")
                 |> ignore
 
             b.Property<string>("Description")
+                .IsRequired(true)
+                .HasColumnType("TEXT")
+                |> ignore
+
+            b.Property<TimeSpan>("Duration")
+                .IsRequired(true)
+                .HasColumnType("TEXT")
+                |> ignore
+
+            b.Property<DateTime>("StartDate")
                 .IsRequired(true)
                 .HasColumnType("TEXT")
                 |> ignore
@@ -132,6 +162,13 @@ type MasonDbContextModelSnapshot() =
             b.ToTable("Votings") |> ignore
 
         )) |> ignore
+        modelBuilder.Entity("Database.Connection+Result", (fun b ->
+            b.HasOne("Database.Connection+Variant", "Variant")
+                .WithMany()
+                .HasForeignKey("VariantId")
+                |> ignore
+
+        )) |> ignore
         modelBuilder.Entity("Database.Connection+Variant", (fun b ->
             b.HasOne("Database.Connection+Voting", "Voting")
                 .WithMany()
@@ -140,10 +177,6 @@ type MasonDbContextModelSnapshot() =
 
         )) |> ignore
         modelBuilder.Entity("Database.Connection+Vote", (fun b ->
-            b.HasOne("Database.Connection+User", "User")
-                .WithMany()
-                .HasForeignKey("UserTelegramId")
-                |> ignore
             b.HasOne("Database.Connection+Variant", "Variant")
                 .WithMany()
                 .HasForeignKey("VariantId")

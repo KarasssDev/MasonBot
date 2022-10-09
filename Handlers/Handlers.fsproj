@@ -7,10 +7,14 @@
 
     <ItemGroup>
         <Compile Include="Querying.fs" />
+        <Compile Include="Runtime.fs" />
         <Compile Include="Content.fs" />
         <Compile Include="Callback.fs" />
         <Compile Include="Basic.fs" />
         <Compile Include="StaticContentHandlers.fs" />
+        <Compile Include="AuthorizationHandlers.fs" />
+        <Compile Include="ForMasonHandlers.fs" />
+        <Compile Include="VotingHandlers.fs" />
         <Compile Include="MainHandler.fs" />
     </ItemGroup>
 

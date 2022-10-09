@@ -9,6 +9,10 @@ module Callback =
         | BuyMasonNFT
         | AboutNFT
         | Start
+        | Authorization
+        | ForMason
+        | Statistics
+        | Voting
 
     let string2SimpleCallbackContent str =
         match str with
@@ -18,6 +22,10 @@ module Callback =
         | "BuyMasonNFT" -> Some BuyMasonNFT
         | "AboutNFT" -> Some AboutNFT
         | "Start" -> Some Start
+        | "Authorization" -> Some Authorization
+        | "ForMason" -> Some ForMason
+        | "Statistics" -> Some Statistics
+        | "Voting" -> Some Voting
         | _ -> None
 
     let callbackContent2String content =
@@ -28,3 +36,7 @@ module Callback =
         | BuyMasonNFT -> "BuyMasonNFT"
         | AboutNFT -> "AboutNFT"
         | Start -> "Start"
+        | Authorization -> "Authorization"
+        | ForMason -> "ForMason"
+        | Statistics -> "Statistics"
+        | Voting -> "Voting"

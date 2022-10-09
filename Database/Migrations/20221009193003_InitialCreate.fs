@@ -10,7 +10,7 @@ open Microsoft.EntityFrameworkCore.Migrations
 open Microsoft.EntityFrameworkCore.Storage.ValueConversion
 
 [<DbContext(typeof<Connection.MasonDbContext>)>]
-[<Migration("20220930133639_InitialCreate")>]
+[<Migration("20221009193003_InitialCreate")>]
 type InitialCreate() =
     inherit Migration()
 
@@ -20,13 +20,13 @@ type InitialCreate() =
             ,columns = (fun table -> 
             {|
                 TelegramId =
-                    table.Column<int>(
+                    table.Column<Int64>(
                         nullable = false
                         ,``type`` = "INTEGER"
                     ).Annotation("Sqlite:Autoincrement", true)
                 Wallet =
                     table.Column<string>(
-                        nullable = false
+                        nullable = true
                         ,``type`` = "TEXT"
                     )
             |})
@@ -42,17 +42,27 @@ type InitialCreate() =
             ,columns = (fun table -> 
             {|
                 Id =
-                    table.Column<int>(
+                    table.Column<Guid>(
                         nullable = false
-                        ,``type`` = "INTEGER"
-                    ).Annotation("Sqlite:Autoincrement", true)
+                        ,``type`` = "TEXT"
+                    )
                 CreatorTelegramId =
-                    table.Column<int>(
+                    table.Column<Int64>(
                         nullable = true
                         ,``type`` = "INTEGER"
                     )
                 Description =
                     table.Column<string>(
+                        nullable = false
+                        ,``type`` = "TEXT"
+                    )
+                StartDate =
+                    table.Column<DateTime>(
+                        nullable = false
+                        ,``type`` = "TEXT"
+                    )
+                Duration =
+                    table.Column<TimeSpan>(
                         nullable = false
                         ,``type`` = "TEXT"
                     )
@@ -76,19 +86,19 @@ type InitialCreate() =
             ,columns = (fun table -> 
             {|
                 Id =
-                    table.Column<int>(
+                    table.Column<Guid>(
                         nullable = false
-                        ,``type`` = "INTEGER"
-                    ).Annotation("Sqlite:Autoincrement", true)
+                        ,``type`` = "TEXT"
+                    )
                 Description =
                     table.Column<string>(
                         nullable = false
                         ,``type`` = "TEXT"
                     )
                 VotingId =
-                    table.Column<int>(
+                    table.Column<Guid>(
                         nullable = true
-                        ,``type`` = "INTEGER"
+                        ,``type`` = "TEXT"
                     )
             |})
             , constraints =
@@ -106,41 +116,63 @@ type InitialCreate() =
         ) |> ignore
 
         migrationBuilder.CreateTable(
+            name = "Results"
+            ,columns = (fun table -> 
+            {|
+                Id =
+                    table.Column<Guid>(
+                        nullable = false
+                        ,``type`` = "TEXT"
+                    )
+                VariantId =
+                    table.Column<Guid>(
+                        nullable = true
+                        ,``type`` = "TEXT"
+                    )
+                Count =
+                    table.Column<int>(
+                        nullable = false
+                        ,``type`` = "INTEGER"
+                    )
+            |})
+            , constraints =
+                (fun table -> 
+                    table.PrimaryKey("PK_Results", (fun x -> (x.Id) :> obj)
+                    ) |> ignore
+                    table.ForeignKey(
+                        name = "FK_Results_Variants_VariantId"
+                        ,column = (fun x -> (x.VariantId) :> obj)
+                        ,principalTable = "Variants"
+                        ,principalColumn = "Id"
+                        ) |> ignore
+
+                )
+        ) |> ignore
+
+        migrationBuilder.CreateTable(
             name = "Votes"
             ,columns = (fun table -> 
             {|
                 Id =
-                    table.Column<int>(
-                        nullable = false
-                        ,``type`` = "INTEGER"
-                    ).Annotation("Sqlite:Autoincrement", true)
-                Description =
-                    table.Column<string>(
+                    table.Column<Guid>(
                         nullable = false
                         ,``type`` = "TEXT"
                     )
-                UserTelegramId =
-                    table.Column<int>(
-                        nullable = true
-                        ,``type`` = "INTEGER"
-                    )
                 VariantId =
-                    table.Column<int>(
+                    table.Column<Guid>(
                         nullable = true
-                        ,``type`` = "INTEGER"
+                        ,``type`` = "TEXT"
+                    )
+                NftAddress =
+                    table.Column<string>(
+                        nullable = false
+                        ,``type`` = "TEXT"
                     )
             |})
             , constraints =
                 (fun table -> 
                     table.PrimaryKey("PK_Votes", (fun x -> (x.Id) :> obj)
                     ) |> ignore
-                    table.ForeignKey(
-                        name = "FK_Votes_Users_UserTelegramId"
-                        ,column = (fun x -> (x.UserTelegramId) :> obj)
-                        ,principalTable = "Users"
-                        ,principalColumn = "TelegramId"
-                        ) |> ignore
-
                     table.ForeignKey(
                         name = "FK_Votes_Variants_VariantId"
                         ,column = (fun x -> (x.VariantId) :> obj)
@@ -152,15 +184,15 @@ type InitialCreate() =
         ) |> ignore
 
         migrationBuilder.CreateIndex(
-            name = "IX_Variants_VotingId"
-            ,table = "Variants"
-            ,column = "VotingId"
+            name = "IX_Results_VariantId"
+            ,table = "Results"
+            ,column = "VariantId"
             ) |> ignore
 
         migrationBuilder.CreateIndex(
-            name = "IX_Votes_UserTelegramId"
-            ,table = "Votes"
-            ,column = "UserTelegramId"
+            name = "IX_Variants_VotingId"
+            ,table = "Variants"
+            ,column = "VotingId"
             ) |> ignore
 
         migrationBuilder.CreateIndex(
@@ -177,6 +209,10 @@ type InitialCreate() =
 
 
     override this.Down(migrationBuilder:MigrationBuilder) =
+        migrationBuilder.DropTable(
+            name = "Results"
+            ) |> ignore
+
         migrationBuilder.DropTable(
             name = "Votes"
             ) |> ignore
@@ -197,16 +233,45 @@ type InitialCreate() =
     override this.BuildTargetModel(modelBuilder: ModelBuilder) =
         modelBuilder.HasAnnotation("ProductVersion", "6.0.9") |> ignore
 
+        modelBuilder.Entity("Database.Connection+Result", (fun b ->
+
+            b.Property<Guid>("Id")
+                .IsRequired(true)
+                .ValueGeneratedOnAdd()
+                .HasColumnType("TEXT")
+                |> ignore
+
+            b.Property<int>("Count")
+                .IsRequired(true)
+                .HasColumnType("INTEGER")
+                |> ignore
+
+            b.Property<Nullable<Guid>>("VariantId")
+                .IsRequired(false)
+                .HasColumnType("TEXT")
+                |> ignore
+
+            b.HasKey("Id")
+                |> ignore
+
+
+            b.HasIndex("VariantId")
+                |> ignore
+
+            b.ToTable("Results") |> ignore
+
+        )) |> ignore
+
         modelBuilder.Entity("Database.Connection+User", (fun b ->
 
-            b.Property<int>("TelegramId")
+            b.Property<Int64>("TelegramId")
                 .IsRequired(true)
                 .ValueGeneratedOnAdd()
                 .HasColumnType("INTEGER")
                 |> ignore
 
-            b.Property<string>("Wallet")
-                .IsRequired(true)
+            b.Property<string option>("Wallet")
+                .IsRequired(false)
                 .HasColumnType("TEXT")
                 |> ignore
 
@@ -220,10 +285,10 @@ type InitialCreate() =
 
         modelBuilder.Entity("Database.Connection+Variant", (fun b ->
 
-            b.Property<int>("Id")
+            b.Property<Guid>("Id")
                 .IsRequired(true)
                 .ValueGeneratedOnAdd()
-                .HasColumnType("INTEGER")
+                .HasColumnType("TEXT")
                 |> ignore
 
             b.Property<string>("Description")
@@ -231,9 +296,9 @@ type InitialCreate() =
                 .HasColumnType("TEXT")
                 |> ignore
 
-            b.Property<Nullable<int>>("VotingId")
+            b.Property<Nullable<Guid>>("VotingId")
                 .IsRequired(false)
-                .HasColumnType("INTEGER")
+                .HasColumnType("TEXT")
                 |> ignore
 
             b.HasKey("Id")
@@ -249,32 +314,23 @@ type InitialCreate() =
 
         modelBuilder.Entity("Database.Connection+Vote", (fun b ->
 
-            b.Property<int>("Id")
+            b.Property<Guid>("Id")
                 .IsRequired(true)
                 .ValueGeneratedOnAdd()
-                .HasColumnType("INTEGER")
+                .HasColumnType("TEXT")
                 |> ignore
 
-            b.Property<string>("Description")
+            b.Property<string>("NftAddress")
                 .IsRequired(true)
                 .HasColumnType("TEXT")
                 |> ignore
 
-            b.Property<Nullable<int>>("UserTelegramId")
+            b.Property<Nullable<Guid>>("VariantId")
                 .IsRequired(false)
-                .HasColumnType("INTEGER")
-                |> ignore
-
-            b.Property<Nullable<int>>("VariantId")
-                .IsRequired(false)
-                .HasColumnType("INTEGER")
+                .HasColumnType("TEXT")
                 |> ignore
 
             b.HasKey("Id")
-                |> ignore
-
-
-            b.HasIndex("UserTelegramId")
                 |> ignore
 
 
@@ -287,18 +343,28 @@ type InitialCreate() =
 
         modelBuilder.Entity("Database.Connection+Voting", (fun b ->
 
-            b.Property<int>("Id")
+            b.Property<Guid>("Id")
                 .IsRequired(true)
                 .ValueGeneratedOnAdd()
-                .HasColumnType("INTEGER")
+                .HasColumnType("TEXT")
                 |> ignore
 
-            b.Property<Nullable<int>>("CreatorTelegramId")
+            b.Property<Nullable<Int64>>("CreatorTelegramId")
                 .IsRequired(false)
                 .HasColumnType("INTEGER")
                 |> ignore
 
             b.Property<string>("Description")
+                .IsRequired(true)
+                .HasColumnType("TEXT")
+                |> ignore
+
+            b.Property<TimeSpan>("Duration")
+                .IsRequired(true)
+                .HasColumnType("TEXT")
+                |> ignore
+
+            b.Property<DateTime>("StartDate")
                 .IsRequired(true)
                 .HasColumnType("TEXT")
                 |> ignore
@@ -313,6 +379,13 @@ type InitialCreate() =
             b.ToTable("Votings") |> ignore
 
         )) |> ignore
+        modelBuilder.Entity("Database.Connection+Result", (fun b ->
+            b.HasOne("Database.Connection+Variant", "Variant")
+                .WithMany()
+                .HasForeignKey("VariantId")
+                |> ignore
+
+        )) |> ignore
         modelBuilder.Entity("Database.Connection+Variant", (fun b ->
             b.HasOne("Database.Connection+Voting", "Voting")
                 .WithMany()
@@ -321,10 +394,6 @@ type InitialCreate() =
 
         )) |> ignore
         modelBuilder.Entity("Database.Connection+Vote", (fun b ->
-            b.HasOne("Database.Connection+User", "User")
-                .WithMany()
-                .HasForeignKey("UserTelegramId")
-                |> ignore
             b.HasOne("Database.Connection+Variant", "Variant")
                 .WithMany()
                 .HasForeignKey("VariantId")

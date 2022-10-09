@@ -4,7 +4,7 @@ module Paths =
 
     let mutable dataPath = "/data/"
     let staticContentPath() = $"{dataPath}staticContent/"
-    let databasePath() = $"{dataPath}/data.db"
+    let databasePath() = $"{dataPath}data.db"
     let configureDataPath path = dataPath <- path
 
 

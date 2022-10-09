@@ -1,7 +1,7 @@
 namespace TonApi
 
 module MasonNft =
-    
+
     type Collection = {
         address: string
         name: string
@@ -39,7 +39,7 @@ module MasonNft =
         previews: Preview array
         verified: bool
     }
-    
+
     type MasonNfts = {
         nft_items: MasonNft array
     }

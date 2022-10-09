@@ -6,6 +6,14 @@ open Logging
 
 module Content =
 
+    let eyeEmoji = "👁"
+    let infoEmoji = "ℹ️"
+    let lockKeyEmoji = "🔐 "
+    let leftArrowEmoji = "⬅️"
+    let statisticEmoji = "📊"
+    let folderEmoji = "📂"
+
+
     let mutable token = ""
     let mutable logFileWriter = Unchecked.defaultof<StreamWriter>
 

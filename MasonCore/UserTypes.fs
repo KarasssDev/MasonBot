@@ -10,9 +10,15 @@ module UserTypes =
         | WithoutNft of UserId * BlockchainTypes.WalletAddress
         | Unverified of UserId
 
-    let mkUser (userId: UserId) (nftCnt: int) (wallet: BlockchainTypes.WalletAddress option) =
-        match wallet with
-        | Some wallet when nftCnt >= 23 -> Master (userId, wallet)
-        | Some wallet when (0 < nftCnt && nftCnt <= 23) -> Holder (userId, wallet)
-        | Some wallet -> WithoutNft (userId, wallet)
+    let masterNftCount = 23
+    let holderNftCount = 1
+
+    let mkUser (userId: UserId) (nftCnt: int option) (wallet: BlockchainTypes.WalletAddress option) =
+        match nftCnt with
+        | Some cnt ->
+            match wallet with
+            | Some wallet when cnt >= masterNftCount -> Master (userId, wallet)
+            | Some wallet when (holderNftCount <= cnt && cnt <= masterNftCount) -> Holder (userId, wallet)
+            | Some wallet -> WithoutNft (userId, wallet)
+            | None -> Unverified userId
         | None -> Unverified userId
