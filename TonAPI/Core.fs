@@ -63,6 +63,9 @@ module internal Core =
         let query = add "hash" hash []
         asyncRequest GetTransaction query TIMEOUT
     
+    let getInfo (account: string) =
+        let query = add "account" account []
+        asyncRequest GetInfo query TIMEOUT
     
     let private messageOf (response: IFlurlResponse) =
         response.GetStringAsync() |> Async.AwaitTask |> Async.RunSynchronously

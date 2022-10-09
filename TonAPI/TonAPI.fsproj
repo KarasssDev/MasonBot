@@ -8,6 +8,7 @@
     <ItemGroup>
       <Compile Include="MasonNft.fs" />
       <Compile Include="Transaction.fs" />
+      <Compile Include="Account.fs" />
       <Compile Include="Core.fs" />
       <Compile Include="TonApiQuerying.fs" />
     </ItemGroup>

@@ -5,6 +5,7 @@ open System.Collections.Generic
 open Core
 open MasonNft
 open Transaction
+open Account
 open MasonCore.BlockchainTypes
 
 
@@ -26,7 +27,7 @@ module TonApiQuerying =
         searchItems
         <| None
         <| Some COLLECTION
-        <| Some true
+        <| None
         <| NFT_COUNT
         <| 0
     
@@ -74,4 +75,12 @@ module TonApiQuerying =
             msg.value = amount
     }
     
+    let private getInfo (wallet: WalletAddress) =
+        getInfo wallet
+        |> processResponseAsync (fun x -> x.GetJsonAsync<Account>())
+    
+    let getAddresses (wallet: WalletAddress) = opt {
+        let! info = getInfo wallet
+        return info.address
+    }
     
