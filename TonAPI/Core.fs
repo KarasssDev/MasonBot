@@ -1,10 +1,10 @@
 namespace TonApi
 
+open System.Text
 open System.Threading.Tasks
 open Flurl.Http
 
 open Logging
-open MasonCore.Utils
 open MasonNft
 open TonApi.MasonNft
 
@@ -19,22 +19,25 @@ module internal Core =
         member x.Zero () = None
 
     let opt = OptionBuilder()
-    let res = ResultBuilder()
-    type private ApiMethod = SearchItems | GetTransaction | GetInfo
+    type ApiMethod = SearchItems | GetTransaction | GetInfo
     
-    let private apiMethod2url = function
+    let apiMethod2url = function
         | SearchItems -> "nft/searchItems"
         | GetTransaction -> "blockchain/getTransaction"
         | GetInfo -> "account/getInfo"
     
+    let private showQuery query =
+        let sep = ", "
+        $"[{query |> String.concat sep}]"
+    
     let private asyncRequest apiMethod (query: string list) (timeout: int) =
-        task {
+        (apiMethod, task {
             let method = apiMethod2url apiMethod
-            Logging.logInfo $"Requesting {method} with parameters: {query}"
+            Logging.logInfo $"Requesting [{method}] with parameters: {showQuery query}"
             let urlBase = $"{TONAPI_IO}{method}"
             let request = urlBase.AllowAnyHttpStatus().WithTimeout(timeout)
             return! (query |> request.SetQueryParams).GetAsync()
-        }
+        })
     
     let private add name value ps =
         $"{name}={value}" :: ps
@@ -74,11 +77,12 @@ module internal Core =
         Logging.logError $"{messageOf response}"
         None
     
-    let processResponseAsync f (response: Task<IFlurlResponse>) =
+    let processResponseAsync f (response: ApiMethod * Task<IFlurlResponse>) =
         task {
+            let method, response = response
             let! response = response
             let retcode = response.StatusCode
-            Logging.logInfo $"Response with code {retcode}"
+            Logging.logInfo $"Response from [{apiMethod2url method}] with code {retcode}"
             match retcode with
             | 200 -> 
                 let! result = f response

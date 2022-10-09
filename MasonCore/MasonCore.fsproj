@@ -11,7 +11,6 @@
         <Compile Include="UserTypes.fs" />
         <Compile Include="VotingTypes.fs" />
         <Compile Include="Paths.fs" />
-        <Compile Include="Utils.fs" />
     </ItemGroup>
 
 </Project>
