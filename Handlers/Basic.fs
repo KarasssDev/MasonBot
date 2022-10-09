@@ -112,8 +112,10 @@ module Basic =
         Logging.logInfo $"Access to handler[{handlerName}] denied for user[{userId}]"
 
     // Error handling
-    let defaultHandleQueryingError err userId =
+    let defaultHandleQueryingError err userId ctx =
         match err with
-        | Querying.ApiError -> ()
-        | Querying.UnexpectedError -> ()
-        | Querying.UserNotFound -> ()
+        | Querying.ApiError ->
+            sendMarkdown "Мы не можем обработать ваш запрос, так как TonApi в данный момент не работает, попробуйте позже(" userId ctx
+        | Querying.UnexpectedError ->
+            sendMarkdown "Если вы видите это сообщение значит что-то пошло не так" userId ctx
+        | _ as err -> Logging.logError $"Unexpected error {err}"
