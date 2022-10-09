@@ -1,14 +1,16 @@
 namespace TonApi
 
+open System.Text
 open System.Threading.Tasks
 open Flurl.Http
 
 open Logging
+open MasonNft
+open TonApi.MasonNft
 
 module internal Core =
     let private TIMEOUT = 5
     let private TONAPI_IO = "https://tonapi.io/v1/"
-    let private TONCENTER_COM = "https://toncenter.com/api/v2/"
     
     type OptionBuilder() =
         member x.Bind(v,f) = Option.bind f v
@@ -17,6 +19,25 @@ module internal Core =
         member x.Zero () = None
 
     let opt = OptionBuilder()
+    type ApiMethod = SearchItems | GetTransaction | GetInfo
+    
+    let apiMethod2url = function
+        | SearchItems -> "nft/searchItems"
+        | GetTransaction -> "blockchain/getTransaction"
+        | GetInfo -> "account/getInfo"
+    
+    let private showQuery query =
+        let sep = ", "
+        $"[{query |> String.concat sep}]"
+    
+    let private asyncRequest apiMethod (query: string list) (timeout: int) =
+        (apiMethod, task {
+            let method = apiMethod2url apiMethod
+            Logging.logInfo $"Requesting [{method}] with parameters: {showQuery query}"
+            let urlBase = $"{TONAPI_IO}{method}"
+            let request = urlBase.AllowAnyHttpStatus().WithTimeout(timeout)
+            return! (query |> request.SetQueryParams).GetAsync()
+        })
     
     let private add name value ps =
         $"{name}={value}" :: ps
@@ -39,12 +60,15 @@ module internal Core =
             |> add "limit" limit
             |> add "offset" offset
             
-        task {
-            Logging.logInfo $"Requesting nft/searchItems with parameters: {query}"
-            let urlBase = TONAPI_IO + "nft/searchItems"
-            let request = urlBase.AllowAnyHttpStatus().WithTimeout(TIMEOUT)
-            return! (query |> request.SetQueryParams).GetAsync()
-        }
+        asyncRequest SearchItems query TIMEOUT
+    
+    let getTransaction (hash: string) =
+        let query = add "hash" hash []
+        asyncRequest GetTransaction query TIMEOUT
+    
+    let getInfo (account: string) =
+        let query = add "account" account []
+        asyncRequest GetInfo query TIMEOUT
     
     let private messageOf (response: IFlurlResponse) =
         response.GetStringAsync() |> Async.AwaitTask |> Async.RunSynchronously
@@ -53,11 +77,12 @@ module internal Core =
         Logging.logError $"{messageOf response}"
         None
     
-    let processResponseAsync f (response: Task<IFlurlResponse>) =
+    let processResponseAsync f (response: ApiMethod * Task<IFlurlResponse>) =
         task {
+            let method, response = response
             let! response = response
             let retcode = response.StatusCode
-            Logging.logInfo $"Response with code {retcode}"
+            Logging.logInfo $"Response from [{apiMethod2url method}] with code {retcode}"
             match retcode with
             | 200 -> 
                 let! result = f response
