@@ -1,6 +1,6 @@
 namespace TonApi
 
-module internal MasonNft =
+module MasonNft =
     
     type Collection = {
         address: string
