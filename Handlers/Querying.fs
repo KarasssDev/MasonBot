@@ -66,11 +66,17 @@ module Querying =
             return DbQuerying.updateUserWallet ctx user wallet
         }
 
+    // Authorization
+    let verifyTransaction message amount hash =
+        result {
+            let! res = TonApiQuerying.verifyTransaction message amount hash |> toApiError
+            return res
+        }
+    
     // Statistic
     let getStatistic formatter =
         result {
             let! rawStatistic = TonApiQuerying.getStatistics () |> toApiError
             return formatter rawStatistic
         }
-
-
+  

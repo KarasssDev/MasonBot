@@ -8,9 +8,10 @@ module Transaction =
         destination: Owner
         source: Owner
         value: uint64
+        msg_data: string
     }
     
     type Transaction = {
-        in_msg: Message
+        out_msgs: Message array
     }
 
