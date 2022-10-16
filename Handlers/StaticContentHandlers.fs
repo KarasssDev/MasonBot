@@ -12,7 +12,7 @@ module StaticContentHandlers =
     let welcomeKeyboard = createInlineKeyboard [|
         [| ($"{infoEmoji} Как стать масоном?", HowToMason) |]
         [| ($"{infoEmoji} Что такое TON MASON?", WhatIsMason) |]
-        [| ($"{lockKeyEmoji} Авторизация", Authorization) |]
+        [| ($"{lockKeyEmoji} Авторизация", AuthorizationStart) |]
         [| ($"{eyeEmoji} Для посвященных", ForMason) |]
     |]
 

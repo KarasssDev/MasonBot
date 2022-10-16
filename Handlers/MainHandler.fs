@@ -10,13 +10,14 @@ module MainHandler =
     let updateArrived (ctx: UpdateContext) =
         try
             match Basic.processHandlers [
+                AuthorizationHandlers.handleAuthorizationStart
+                AuthorizationHandlers.handleAuthorizationVerification
                 StaticContentHandlers.handleStart
                 StaticContentHandlers.handleHowToMason
                 StaticContentHandlers.handleWhatIsMason
                 StaticContentHandlers.handleBuyTon
                 StaticContentHandlers.handleAboutNFT
                 StaticContentHandlers.handleBuyMasonNFT
-                AuthorizationHandlers.handleAuthorization
                 ForMasonHandlers.handleForMason
                 ForMasonHandlers.handleStatistics
                 VotingHandlers.handleVoting

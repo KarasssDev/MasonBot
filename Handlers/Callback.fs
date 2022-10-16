@@ -9,7 +9,8 @@ module Callback =
         | BuyMasonNFT
         | AboutNFT
         | Start
-        | Authorization
+        | AuthorizationStart
+        | AuthorizationVerification
         | ForMason
         | Statistics
         | Voting
@@ -22,7 +23,8 @@ module Callback =
         | "BuyMasonNFT" -> Some BuyMasonNFT
         | "AboutNFT" -> Some AboutNFT
         | "Start" -> Some Start
-        | "Authorization" -> Some Authorization
+        | "AuthorizationStart" -> Some AuthorizationStart
+        | "AuthorizationVerification" -> Some AuthorizationVerification
         | "ForMason" -> Some ForMason
         | "Statistics" -> Some Statistics
         | "Voting" -> Some Voting
@@ -36,7 +38,8 @@ module Callback =
         | BuyMasonNFT -> "BuyMasonNFT"
         | AboutNFT -> "AboutNFT"
         | Start -> "Start"
-        | Authorization -> "Authorization"
+        | AuthorizationStart -> "AuthorizationStart"
+        | AuthorizationVerification -> "AuthorizationVerification"
         | ForMason -> "ForMason"
         | Statistics -> "Statistics"
         | Voting -> "Voting"

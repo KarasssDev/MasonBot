@@ -18,6 +18,15 @@ module Basic =
             if text = expectedText then Some chat else None
         | _ -> None
 
+    let matchAnyMessage ctx =
+        let message = ctx.Update.Message
+        match message with
+        | Some {Chat = chat; Text = Some text} ->
+            Some chat, Some text
+        | Some {Chat = chat} ->
+            Some chat, None
+        | _ -> None, None
+    
     let matchSimpleCallbackMessage expectedCallback ctx =
         let callback = ctx.Update.CallbackQuery
         match callback with
@@ -112,10 +121,12 @@ module Basic =
         Logging.logInfo $"Access to handler[{handlerName}] denied for user[{userId}]"
 
     // Error handling
-    let defaultHandleQueryingError err userId ctx =
+    let defaultHandleQueryingError err =
         match err with
         | Querying.ApiError ->
-            sendMarkdown "Мы не можем обработать ваш запрос, так как TonApi в данный момент не работает, попробуйте позже(" userId ctx
+            "Мы не можем обработать ваш запрос, так как TonApi в данный момент не работает, попробуйте позже("
         | Querying.UnexpectedError ->
-            sendMarkdown "Если вы видите это сообщение значит что-то пошло не так" userId ctx
-        | _ as err -> Logging.logError $"Unexpected error {err}"
+            "Если вы видите это сообщение значит что-то пошло не так"
+        | err ->
+            Logging.logError $"Unexpected error {err}"
+            ""
