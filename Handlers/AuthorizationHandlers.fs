@@ -6,10 +6,10 @@ open Funogram.Telegram.Types
 
 open Handlers.Basic
 open Handlers.Callback
-open Handlers.Keyboard
+open Handlers.Content
 open Logging
-open TonApi.TonApiQuerying
 open MasonCore
+open TonApi
 
 module AuthorizationHandlers = // TODO unhardcodig
 
@@ -17,25 +17,21 @@ module AuthorizationHandlers = // TODO unhardcodig
     let private authorizationStartMessage (mes: string) =
         $"""
 Для авторизации необходимо перевести 0,01 TON на кошелек:
-{COLLECTION_WALLET}
+{TonApiQuerying.COLLECTION_WALLET}
 
 При переводе необходимо указать следующее сообщение:
 {mes}
 
 Дождитесь окончания перевода, после чего введите идентификатор транзакции
         """
-    
-    let authKeyboard = createInlineKeyboard [|
-        [| Button.start |]
-    |]
-    
+
     let private generateMessage (from: User) =
         let date = DateTime.Now.ToLongDateString ()
         let time = DateTime.Now.ToLongTimeString ()
         let id = from.Id.ToString ()
         Text.Encoding.UTF8.GetBytes $"{id}{date}{time}"
         |> Convert.ToBase64String
-    
+
     let private updateRuntime (from: User) mes =
         let id = from.Id
         let info = Runtime.getOrDefault id
@@ -44,8 +40,8 @@ module AuthorizationHandlers = // TODO unhardcodig
         }
         {info with authorizationInfo = Some authInfo}
         |> Runtime.update id
-            
-    
+
+
     let handleAuthorizationStart(ctx: UpdateContext) =
 
         let handlingCallback = AuthorizationStart
@@ -70,19 +66,19 @@ module AuthorizationHandlers = // TODO unhardcodig
                 sendMessage from.Id
                 <| ($"{mes}", ParseMode.Markdown)
                 <| None
-                <| Some authKeyboard
+                <| Some Keyboard.authKeyboard
                 <| ctx.Config
                 Logging.logDebug $"[{from.Id}]: authorization start error [{mes}]"
             | _ ->
                 sendMessage from.Id
                 <| ("Вы уже авторизованы!", ParseMode.Markdown)
                 <| None
-                <| Some authKeyboard
+                <| Some Keyboard.authKeyboard
                 <| ctx.Config
                 Logging.logDebug $"[{from.Id}] already authorized"
             HandlingResult.Success
         | None -> HandlingResult.Fail
-    
+
     let handleAuthorizationVerification(ctx: UpdateContext) =
         let handlingCallback = AuthorizationVerification
         let handlerName = "AuthorizationVerification"
@@ -98,7 +94,7 @@ module AuthorizationHandlers = // TODO unhardcodig
                 logCallback handlerName from.Id handlingCallback
                 let info = Runtime.getOrDefault from.Id
                 let mes = info.authorizationInfo.Value.message.Trim()
-                
+
                 let ansMes =
                     match Querying.verifyTransaction mes AUTH_SUM hash with
                     | Ok (true, wallet) ->
@@ -117,13 +113,13 @@ module AuthorizationHandlers = // TODO unhardcodig
                         let mes = defaultHandleQueryingError err
                         Logging.logError $"Verification API error: [{from.Id}] with [{mes}]"
                         "Ошибка сервера авторизации. Возможно, вы ввели неверный идентификатор транзакции"
-                    
+
                 sendMessage from.Id
                 <| (ansMes, ParseMode.Markdown)
                 <| None
-                <| Some authKeyboard
+                <| Some Keyboard.authKeyboard
                 <| ctx.Config
-                
+
                 Runtime.disableAuthorization from.Id
                 HandlingResult.Success
         | Some from, None ->

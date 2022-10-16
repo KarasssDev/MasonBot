@@ -9,15 +9,10 @@ open Handlers.Callback
 open Handlers.Content
 open MasonCore
 open Microsoft.FSharp.Core
-open Handlers.Keyboard
 
 module ForMasonHandlers = // TODO
 
-    let forMasonKeyboard = createInlineKeyboard [|
-        [| Button.statistics |]
-        [| Button.voting |]
-        [| Button.start |]
-    |]
+
 
     let handleForMason(ctx: UpdateContext) =
 
@@ -34,19 +29,19 @@ module ForMasonHandlers = // TODO
                 sendMessage from.Id
                 <| ("TODO message", ParseMode.Markdown)
                 <| None
-                <| Some forMasonKeyboard
+                <| Some Keyboard.forMasonKeyboard
                 <| ctx.Config
             | Ok _ ->
                 sendMessage from.Id
-                <| ("TODO Access denied", ParseMode.Markdown)
+                <| (Text.accessDeniedHolder, ParseMode.Markdown)
                 <| None
-                <| Some StaticContentHandlers.welcomeKeyboard
+                <| Some Keyboard.welcomeKeyboard
                 <| ctx.Config
             | Error err ->
                 sendMessage from.Id
                 <| ("TODO match error", ParseMode.Markdown)
                 <| None
-                <| Some StaticContentHandlers.welcomeKeyboard
+                <| Some Keyboard.welcomeKeyboard
                 <| ctx.Config
             HandlingResult.Success
         | None -> HandlingResult.Fail
@@ -78,20 +73,20 @@ module ForMasonHandlers = // TODO
                     sendMessage from.Id
                     <| (statistic, ParseMode.Markdown)
                     <| None
-                    <| Some forMasonKeyboard
+                    <| Some Keyboard.forMasonKeyboard
                     <| ctx.Config
                 | Error err -> ()
             | Ok _ ->
                 sendMessage from.Id
-                <| ("TODO Access denied", ParseMode.Markdown)
+                <| (Text.accessDeniedHolder, ParseMode.Markdown)
                 <| None
-                <| Some StaticContentHandlers.welcomeKeyboard
+                <| Some Keyboard.welcomeKeyboard
                 <| ctx.Config
             | Error err ->
                 sendMessage from.Id
                 <| ("TODO match error", ParseMode.Markdown)
                 <| None
-                <| Some StaticContentHandlers.welcomeKeyboard
+                <| Some Keyboard.welcomeKeyboard
                 <| ctx.Config
             HandlingResult.Success
         | None -> HandlingResult.Fail

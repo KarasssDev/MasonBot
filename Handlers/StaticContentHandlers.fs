@@ -6,23 +6,9 @@ open Funogram.Telegram.Types
 open Handlers.Basic
 open Handlers.Callback
 open Handlers.Content
-open Handlers.Keyboard
+
 
 module StaticContentHandlers =
-
-    let welcomeKeyboard = createInlineKeyboard [|
-        [| Button.howToMason |]
-        [| Button.whatIsMason |]
-        [| Button.authorization |]
-        [| Button.forMason |]
-    |]
-
-    let howToMasonKeyboard = createInlineKeyboard [|
-        [| Button.buyTon |]
-        [| Button.aboutNft |]
-        [| Button.buyMasonNft |]
-        [| Button.start |]
-    |]
 
     let handleStart (ctx: UpdateContext) =
 
@@ -32,11 +18,17 @@ module StaticContentHandlers =
 
         match (matchTextMessage handlingText ctx) with
         | Some chat ->
+            if Querying.userExist chat.Id |> not then Querying.createUser chat.Id None |> ignore
             logMessage handlerName chat.Id handlingText
+            let user = Querying.getUser chat.Id
+            match user with
+            | Error Querying.UserNotFound -> Querying.createUser chat.Id None |> ignore
+            | _ -> ()
+
             sendMessage chat.Id
             <| (welcomeMessage, ParseMode.Markdown)
             <| Some (welcomePhoto())
-            <| Some welcomeKeyboard
+            <| Some Keyboard.welcomeKeyboard
             <| ctx.Config
             HandlingResult.Success
         | None ->
@@ -46,7 +38,7 @@ module StaticContentHandlers =
                 sendMessage from.Id
                 <| (welcomeMessage, ParseMode.Markdown)
                 <| Some (welcomePhoto())
-                <| Some welcomeKeyboard
+                <| Some Keyboard.welcomeKeyboard
                 <| ctx.Config
                 HandlingResult.Success
             | None -> HandlingResult.Fail
@@ -62,7 +54,7 @@ module StaticContentHandlers =
             sendMessage from.Id
             <| (howToMasonMessage, ParseMode.Markdown)
             <| None
-            <| Some howToMasonKeyboard
+            <| Some Keyboard.howToMasonKeyboard
             <| ctx.Config
             HandlingResult.Success
         | None -> HandlingResult.Fail
@@ -78,7 +70,7 @@ module StaticContentHandlers =
             sendMessage from.Id
             <| (whatIsMasonMessage, ParseMode.Markdown)
             <| None
-            <| Some welcomeKeyboard
+            <| Some Keyboard.welcomeKeyboard
             <| ctx.Config
             HandlingResult.Success
         | None -> HandlingResult.Fail
@@ -94,7 +86,7 @@ module StaticContentHandlers =
             sendMessage from.Id
             <| (buyTonMessage, ParseMode.Markdown)
             <| None
-            <| Some howToMasonKeyboard
+            <| Some Keyboard.howToMasonKeyboard
             <| ctx.Config
             HandlingResult.Success
         | None -> HandlingResult.Fail
@@ -110,7 +102,7 @@ module StaticContentHandlers =
             sendMessage from.Id
             <| (aboutNftMessage, ParseMode.Markdown)
             <| None
-            <| Some howToMasonKeyboard
+            <| Some Keyboard.howToMasonKeyboard
             <| ctx.Config
             HandlingResult.Success
         | None -> HandlingResult.Fail
@@ -126,7 +118,7 @@ module StaticContentHandlers =
             sendMessage from.Id
             <| (buyMasonNftMessage, ParseMode.Markdown)
             <| None
-            <| Some howToMasonKeyboard
+            <| Some Keyboard.howToMasonKeyboard
             <| ctx.Config
             HandlingResult.Success
         | None -> HandlingResult.Fail
