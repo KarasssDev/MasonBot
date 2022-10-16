@@ -5,13 +5,13 @@ open Funogram.Telegram.Types
 
 open Handlers.Basic
 open Handlers.Callback
-open Handlers.Content
+open Handlers.Keyboard
 open MasonCore
 
 module VotingHandlers = // TODO
 
     let votingKeyboard = createInlineKeyboard [|
-        [| ($"{leftArrowEmoji} В главное меню", Start) |]
+        [| Button.start |]
     |]
 
     let handleVoting(ctx: UpdateContext) =

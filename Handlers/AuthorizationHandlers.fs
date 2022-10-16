@@ -6,11 +6,12 @@ open Funogram.Telegram.Types
 
 open Handlers.Basic
 open Handlers.Callback
+open Handlers.Keyboard
 open Logging
 open TonApi.TonApiQuerying
 open MasonCore
 
-module AuthorizationHandlers = // TODO
+module AuthorizationHandlers = // TODO unhardcodig
 
     let private AUTH_SUM = 10000000UL
     let private authorizationStartMessage (mes: string) =
@@ -25,7 +26,7 @@ module AuthorizationHandlers = // TODO
         """
     
     let authKeyboard = createInlineKeyboard [|
-        [| ("В главное меню", Start) |]
+        [| Button.start |]
     |]
     
     let private generateMessage (from: User) =
