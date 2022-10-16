@@ -6,21 +6,22 @@ open Funogram.Telegram.Types
 open Handlers.Basic
 open Handlers.Callback
 open Handlers.Content
+open Handlers.Keyboard
 
 module StaticContentHandlers =
 
     let welcomeKeyboard = createInlineKeyboard [|
-        [| ($"{infoEmoji} Как стать масоном?", HowToMason) |]
-        [| ($"{infoEmoji} Что такое TON MASON?", WhatIsMason) |]
-        [| ($"{lockKeyEmoji} Авторизация", AuthorizationStart) |]
-        [| ($"{eyeEmoji} Для посвященных", ForMason) |]
+        [| Button.howToMason |]
+        [| Button.whatIsMason |]
+        [| Button.authorization |]
+        [| Button.forMason |]
     |]
 
     let howToMasonKeyboard = createInlineKeyboard [|
-        [| $"{infoEmoji} Как купить TON?", BuyTon |]
-        [| $"{infoEmoji} Всё об NFT", AboutNFT |]
-        [| $"{infoEmoji} Как купить NFT TON MASON?", BuyMasonNFT |]
-        [| $"{leftArrowEmoji} В главное меню", Start |]
+        [| Button.buyTon |]
+        [| Button.aboutNft |]
+        [| Button.buyMasonNft |]
+        [| Button.start |]
     |]
 
     let handleStart (ctx: UpdateContext) =

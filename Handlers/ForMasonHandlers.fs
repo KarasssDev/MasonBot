@@ -9,13 +9,14 @@ open Handlers.Callback
 open Handlers.Content
 open MasonCore
 open Microsoft.FSharp.Core
+open Handlers.Keyboard
 
 module ForMasonHandlers = // TODO
 
     let forMasonKeyboard = createInlineKeyboard [|
-        [| ($"{statisticEmoji} Статистика", Statistics) |]
-        [| ($"{folderEmoji} Голосования", Voting) |]
-        [| ($"{leftArrowEmoji} В главное меню", Start) |]
+        [| Button.statistics |]
+        [| Button.voting |]
+        [| Button.start |]
     |]
 
     let handleForMason(ctx: UpdateContext) =
