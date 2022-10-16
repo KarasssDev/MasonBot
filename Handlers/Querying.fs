@@ -55,6 +55,13 @@ module Querying =
                 return UserTypes.mkUser user.TelegramId None user.Wallet
         }
 
+    let userExist (telegramId: int64) =
+        use ctx = new Connection.MasonDbContext()
+        let user = DbQuerying.getUser ctx telegramId
+        match user with
+        | [_] -> true
+        | _ -> false
+
     let createUser telegramId wallet =
         use ctx = new Connection.MasonDbContext()
         DbQuerying.createUser ctx telegramId wallet
@@ -72,11 +79,10 @@ module Querying =
             let! res = TonApiQuerying.verifyTransaction message amount hash |> toApiError
             return res
         }
-    
+
     // Statistic
     let getStatistic formatter =
         result {
             let! rawStatistic = TonApiQuerying.getStatistics () |> toApiError
             return formatter rawStatistic
         }
-  

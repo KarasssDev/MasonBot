@@ -5,14 +5,10 @@ open Funogram.Telegram.Types
 
 open Handlers.Basic
 open Handlers.Callback
-open Handlers.Keyboard
+open Handlers.Content
 open MasonCore
 
 module VotingHandlers = // TODO
-
-    let votingKeyboard = createInlineKeyboard [|
-        [| Button.start |]
-    |]
 
     let handleVoting(ctx: UpdateContext) =
 
@@ -29,19 +25,19 @@ module VotingHandlers = // TODO
                 sendMessage from.Id
                 <| ("TODO message", ParseMode.Markdown)
                 <| None
-                <| Some ForMasonHandlers.forMasonKeyboard
+                <| Some Keyboard.votingKeyboard
                 <| ctx.Config
             | Ok _ ->
                 sendMessage from.Id
-                <| ("TODO Access denied", ParseMode.Markdown)
+                <| (Text.accessDeniedHolder, ParseMode.Markdown)
                 <| None
-                <| Some ForMasonHandlers.forMasonKeyboard
+                <| Some Keyboard.forMasonKeyboard
                 <| ctx.Config
             | Error err ->
                 sendMessage from.Id
                 <| ("TODO match error", ParseMode.Markdown)
                 <| None
-                <| Some ForMasonHandlers.forMasonKeyboard
+                <| Some Keyboard.forMasonKeyboard
                 <| ctx.Config
             HandlingResult.Success
         | None -> HandlingResult.Fail

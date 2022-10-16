@@ -26,7 +26,7 @@ module Basic =
         | Some {Chat = chat} ->
             Some chat, None
         | _ -> None, None
-    
+
     let matchSimpleCallbackMessage expectedCallback ctx =
         let callback = ctx.Update.CallbackQuery
         match callback with

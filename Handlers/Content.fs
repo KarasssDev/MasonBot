@@ -1,19 +1,63 @@
 namespace Handlers
 
+
 open System.IO
 open MasonCore
 open Logging
+open Callback
+open Basic
 
 module Content =
 
-    let eyeEmoji = "👁"
-    let infoEmoji = "ℹ️"
-    let lockKeyEmoji = "🔐 "
-    let leftArrowEmoji = "⬅️"
-    let statisticEmoji = "📊"
-    let folderEmoji = "📂"
+    module Text =
+        let eyeEmoji = "👁"
+        let infoEmoji = "ℹ️"
+        let lockKeyEmoji = "🔐 "
+        let leftArrowEmoji = "⬅️"
+        let statisticEmoji = "📊"
+        let folderEmoji = "📂"
+
+        let accessDeniedHolder = "Ты не холдер"
+        let accessDeniedMaster = "Ты не мастер"
 
 
+    module private Button =
+
+        let start = ($"{Text.leftArrowEmoji} В главное меню", Start)
+        let voting = ($"{Text.folderEmoji} Голосования", Voting)
+        let statistics = ($"{Text.statisticEmoji} Статистика", Statistics)
+        let howToMason = ($"{Text.infoEmoji} Как стать масоном?", HowToMason)
+        let whatIsMason = ($"{Text.infoEmoji} Что такое TON MASON?", WhatIsMason)
+        let authorization = ($"{Text.lockKeyEmoji} Авторизация", AuthorizationStart)
+        let forMason = ($"{Text.eyeEmoji} Для посвященных", ForMason)
+        let buyTon = $"{Text.infoEmoji} Как купить TON?", BuyTon
+        let aboutNft = $"{Text.infoEmoji} Всё об NFT", AboutNFT
+        let buyMasonNft = $"{Text.infoEmoji} Как купить NFT TON MASON?", BuyMasonNFT
+
+    module Keyboard =
+            let forMasonKeyboard = createInlineKeyboard [|
+                [| Button.statistics |]
+                [| Button.voting |]
+                [| Button.start |]
+            |]
+            let welcomeKeyboard = createInlineKeyboard [|
+                [| Button.howToMason |]
+                [| Button.whatIsMason |]
+                [| Button.authorization |]
+                [| Button.forMason |]
+            |]
+            let howToMasonKeyboard = createInlineKeyboard [|
+                [| Button.buyTon |]
+                [| Button.aboutNft |]
+                [| Button.buyMasonNft |]
+                [| Button.start |]
+            |]
+            let authKeyboard = createInlineKeyboard [|
+                [| Button.start |]
+            |]
+            let votingKeyboard = createInlineKeyboard [|
+                [| Button.start |]
+            |]
     let mutable token = ""
     let mutable logFileWriter = Unchecked.defaultof<StreamWriter>
 
