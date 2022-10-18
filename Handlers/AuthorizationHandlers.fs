@@ -1,8 +1,12 @@
 namespace Handlers
 
 open System
+open System.IO
 open Funogram.Telegram.Bot
 open Funogram.Telegram.Types
+open System.Security.Cryptography
+open System.Text
+open QRCoder
 
 open Handlers.Basic
 open Handlers.Callback
@@ -14,24 +18,34 @@ open TonApi
 module AuthorizationHandlers = // TODO unhardcodig
 
     let private AUTH_SUM = 10000000UL
-    let private authorizationStartMessage (mes: string) =
-        $"""
-Для авторизации необходимо перевести 0,01 TON на кошелек:
-{TonApiQuerying.COLLECTION_WALLET}
-
-При переводе необходимо указать следующее сообщение:
-{mes}
-
-Дождитесь окончания перевода, после чего введите идентификатор транзакции
+    let private authorizationStartMessage =
+        """
+Для авторизации необходимо перевести 0,01 TON на специальный кошелек
+Вы можете перейти по ссылке или отсканировать QR-код:
         """
 
     let private generateMessage (from: User) =
-        let date = DateTime.Now.ToLongDateString ()
-        let time = DateTime.Now.ToLongTimeString ()
         let id = from.Id.ToString ()
-        Text.Encoding.UTF8.GetBytes $"{id}{date}{time}"
-        |> Convert.ToBase64String
+        let data = Encoding.UTF8.GetBytes id
+        use md5 = MD5.Create ()
+        (StringBuilder(), md5.ComputeHash(data))
+        ||> Array.fold (fun sb b -> sb.Append(b.ToString("x2")))
+        |> string
 
+    let private generateLink (mes: string) =
+        let domain = "https://app.tonkeeper.com"
+        let path = $"transfer/{TonApiQuerying.COLLECTION_WALLET}"
+        let query = [ $"amount={AUTH_SUM}"; $"text={mes}" ]
+        let sep = "&"
+        $"{domain}/{path}?{query |> String.concat sep}"
+        
+    let private generateQR (mes: string) =
+        use qrGen = new QRCodeGenerator()
+        let qrData = qrGen.CreateQrCode(mes, QRCodeGenerator.ECCLevel.Q)
+        use qrCode = new PngByteQRCode(qrData)
+        let bytes = qrCode.GetGraphic(10)
+        Funogram.Telegram.Types.File ("Authorization QR-code", new MemoryStream(bytes))
+    
     let private updateRuntime (from: User) mes =
         let id = from.Id
         let info = Runtime.getOrDefault id
@@ -52,14 +66,31 @@ module AuthorizationHandlers = // TODO unhardcodig
             Logging.logDebug $"[{from.Id}] started authorization"
             match Querying.getUser from.Id with
             | Ok (UserTypes.Unverified _) ->
-                let mes = "OTcyOTU5ODYyVHVlc2RheSwgMTEgT2N0b2JlciAyMDIyMDI6Mzk6Mzc="//generateMessage from
+                let mes = generateMessage from
                 updateRuntime from mes
                 logCallback handlerName from.Id handlingCallback
+                
                 sendMessage from.Id
-                <| ($"{authorizationStartMessage mes}", ParseMode.Markdown)
+                <| ($"{authorizationStartMessage}", ParseMode.Markdown)
                 <| None
                 <| None
                 <| ctx.Config
+                
+                let link = generateLink mes
+                let qr = generateQR link   
+                sendMessage from.Id
+                <| ($"{link}", ParseMode.Markdown)
+                <| Some qr
+                <| None
+                <| ctx.Config
+                    
+                sendMessage from.Id
+                <| ("Отправьте идентификатор транзакции после завершения ее обработки. Если вы уже совершали транзакцию и что-то пошло не так, то можете отправить ее идентификатор",
+                    ParseMode.Markdown)
+                <| None
+                <| None
+                <| ctx.Config
+                
                 Logging.logDebug $"[{from.Id}] got authorization message: [{mes}]"
             | Error err ->
                 let mes = defaultHandleQueryingError err
