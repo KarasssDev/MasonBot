@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+
+  bot:
+    image: karasss/tonmason
+    ports:
+      - "6000:6000"
+    volumes:
+      - ./logs:/logs
+      - ./data:/data
+      - ./secrets:/secrets
+
