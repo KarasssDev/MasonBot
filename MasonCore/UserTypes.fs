@@ -10,7 +10,7 @@ module UserTypes =
         | WithoutNft of UserId * BlockchainTypes.WalletAddress
         | Unverified of UserId
 
-    let masterNftCount = 23
+    let masterNftCount = 4 // TODO: only for debug
     let holderNftCount = 1
 
     let mkUser (userId: UserId) (nftCnt: int option) (wallet: BlockchainTypes.WalletAddress option) =

@@ -12,6 +12,14 @@ module MainHandler =
             match Basic.processHandlers [
                 AuthorizationHandlers.handleAuthorizationStart
                 AuthorizationHandlers.handleAuthorizationVerification
+                VotingHandlers.handleVoting
+                VotingHandlers.handleCreateVoting
+                VotingHandlers.handleChoseDefaultVotingType
+                VotingHandlers.handleChoseImportantVotingType
+                VotingHandlers.handleChoseVotingDescription
+                VotingHandlers.handleCreateVariant
+                VotingHandlers.handleAccept
+                VotingHandlers.handleDiscard
                 StaticContentHandlers.handleStart
                 StaticContentHandlers.handleHowToMason
                 StaticContentHandlers.handleWhatIsMason

@@ -16,35 +16,6 @@ type MasonDbContextModelSnapshot() =
     override this.BuildModel(modelBuilder: ModelBuilder) =
         modelBuilder.HasAnnotation("ProductVersion", "6.0.9") |> ignore
 
-        modelBuilder.Entity("Database.Connection+Result", (fun b ->
-
-            b.Property<Guid>("Id")
-                .IsRequired(true)
-                .ValueGeneratedOnAdd()
-                .HasColumnType("TEXT")
-                |> ignore
-
-            b.Property<int>("Count")
-                .IsRequired(true)
-                .HasColumnType("INTEGER")
-                |> ignore
-
-            b.Property<Nullable<Guid>>("VariantId")
-                .IsRequired(false)
-                .HasColumnType("TEXT")
-                |> ignore
-
-            b.HasKey("Id")
-                |> ignore
-
-
-            b.HasIndex("VariantId")
-                |> ignore
-
-            b.ToTable("Results") |> ignore
-
-        )) |> ignore
-
         modelBuilder.Entity("Database.Connection+User", (fun b ->
 
             b.Property<Int64>("TelegramId")
@@ -108,12 +79,21 @@ type MasonDbContextModelSnapshot() =
                 .HasColumnType("TEXT")
                 |> ignore
 
+            b.Property<Nullable<Int64>>("UserTelegramId")
+                .IsRequired(false)
+                .HasColumnType("INTEGER")
+                |> ignore
+
             b.Property<Nullable<Guid>>("VariantId")
                 .IsRequired(false)
                 .HasColumnType("TEXT")
                 |> ignore
 
             b.HasKey("Id")
+                |> ignore
+
+
+            b.HasIndex("UserTelegramId")
                 |> ignore
 
 
@@ -162,13 +142,6 @@ type MasonDbContextModelSnapshot() =
             b.ToTable("Votings") |> ignore
 
         )) |> ignore
-        modelBuilder.Entity("Database.Connection+Result", (fun b ->
-            b.HasOne("Database.Connection+Variant", "Variant")
-                .WithMany()
-                .HasForeignKey("VariantId")
-                |> ignore
-
-        )) |> ignore
         modelBuilder.Entity("Database.Connection+Variant", (fun b ->
             b.HasOne("Database.Connection+Voting", "Voting")
                 .WithMany()
@@ -177,6 +150,10 @@ type MasonDbContextModelSnapshot() =
 
         )) |> ignore
         modelBuilder.Entity("Database.Connection+Vote", (fun b ->
+            b.HasOne("Database.Connection+User", "User")
+                .WithMany()
+                .HasForeignKey("UserTelegramId")
+                |> ignore
             b.HasOne("Database.Connection+Variant", "Variant")
                 .WithMany()
                 .HasForeignKey("VariantId")

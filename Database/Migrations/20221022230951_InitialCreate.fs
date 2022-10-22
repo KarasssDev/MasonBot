@@ -10,7 +10,7 @@ open Microsoft.EntityFrameworkCore.Migrations
 open Microsoft.EntityFrameworkCore.Storage.ValueConversion
 
 [<DbContext(typeof<Connection.MasonDbContext>)>]
-[<Migration("20221009193003_InitialCreate")>]
+[<Migration("20221022230951_InitialCreate")>]
 type InitialCreate() =
     inherit Migration()
 
@@ -116,40 +116,6 @@ type InitialCreate() =
         ) |> ignore
 
         migrationBuilder.CreateTable(
-            name = "Results"
-            ,columns = (fun table -> 
-            {|
-                Id =
-                    table.Column<Guid>(
-                        nullable = false
-                        ,``type`` = "TEXT"
-                    )
-                VariantId =
-                    table.Column<Guid>(
-                        nullable = true
-                        ,``type`` = "TEXT"
-                    )
-                Count =
-                    table.Column<int>(
-                        nullable = false
-                        ,``type`` = "INTEGER"
-                    )
-            |})
-            , constraints =
-                (fun table -> 
-                    table.PrimaryKey("PK_Results", (fun x -> (x.Id) :> obj)
-                    ) |> ignore
-                    table.ForeignKey(
-                        name = "FK_Results_Variants_VariantId"
-                        ,column = (fun x -> (x.VariantId) :> obj)
-                        ,principalTable = "Variants"
-                        ,principalColumn = "Id"
-                        ) |> ignore
-
-                )
-        ) |> ignore
-
-        migrationBuilder.CreateTable(
             name = "Votes"
             ,columns = (fun table -> 
             {|
@@ -157,6 +123,11 @@ type InitialCreate() =
                     table.Column<Guid>(
                         nullable = false
                         ,``type`` = "TEXT"
+                    )
+                UserTelegramId =
+                    table.Column<Int64>(
+                        nullable = true
+                        ,``type`` = "INTEGER"
                     )
                 VariantId =
                     table.Column<Guid>(
@@ -174,6 +145,13 @@ type InitialCreate() =
                     table.PrimaryKey("PK_Votes", (fun x -> (x.Id) :> obj)
                     ) |> ignore
                     table.ForeignKey(
+                        name = "FK_Votes_Users_UserTelegramId"
+                        ,column = (fun x -> (x.UserTelegramId) :> obj)
+                        ,principalTable = "Users"
+                        ,principalColumn = "TelegramId"
+                        ) |> ignore
+
+                    table.ForeignKey(
                         name = "FK_Votes_Variants_VariantId"
                         ,column = (fun x -> (x.VariantId) :> obj)
                         ,principalTable = "Variants"
@@ -184,15 +162,15 @@ type InitialCreate() =
         ) |> ignore
 
         migrationBuilder.CreateIndex(
-            name = "IX_Results_VariantId"
-            ,table = "Results"
-            ,column = "VariantId"
-            ) |> ignore
-
-        migrationBuilder.CreateIndex(
             name = "IX_Variants_VotingId"
             ,table = "Variants"
             ,column = "VotingId"
+            ) |> ignore
+
+        migrationBuilder.CreateIndex(
+            name = "IX_Votes_UserTelegramId"
+            ,table = "Votes"
+            ,column = "UserTelegramId"
             ) |> ignore
 
         migrationBuilder.CreateIndex(
@@ -209,10 +187,6 @@ type InitialCreate() =
 
 
     override this.Down(migrationBuilder:MigrationBuilder) =
-        migrationBuilder.DropTable(
-            name = "Results"
-            ) |> ignore
-
         migrationBuilder.DropTable(
             name = "Votes"
             ) |> ignore
@@ -232,35 +206,6 @@ type InitialCreate() =
 
     override this.BuildTargetModel(modelBuilder: ModelBuilder) =
         modelBuilder.HasAnnotation("ProductVersion", "6.0.9") |> ignore
-
-        modelBuilder.Entity("Database.Connection+Result", (fun b ->
-
-            b.Property<Guid>("Id")
-                .IsRequired(true)
-                .ValueGeneratedOnAdd()
-                .HasColumnType("TEXT")
-                |> ignore
-
-            b.Property<int>("Count")
-                .IsRequired(true)
-                .HasColumnType("INTEGER")
-                |> ignore
-
-            b.Property<Nullable<Guid>>("VariantId")
-                .IsRequired(false)
-                .HasColumnType("TEXT")
-                |> ignore
-
-            b.HasKey("Id")
-                |> ignore
-
-
-            b.HasIndex("VariantId")
-                |> ignore
-
-            b.ToTable("Results") |> ignore
-
-        )) |> ignore
 
         modelBuilder.Entity("Database.Connection+User", (fun b ->
 
@@ -325,12 +270,21 @@ type InitialCreate() =
                 .HasColumnType("TEXT")
                 |> ignore
 
+            b.Property<Nullable<Int64>>("UserTelegramId")
+                .IsRequired(false)
+                .HasColumnType("INTEGER")
+                |> ignore
+
             b.Property<Nullable<Guid>>("VariantId")
                 .IsRequired(false)
                 .HasColumnType("TEXT")
                 |> ignore
 
             b.HasKey("Id")
+                |> ignore
+
+
+            b.HasIndex("UserTelegramId")
                 |> ignore
 
 
@@ -379,13 +333,6 @@ type InitialCreate() =
             b.ToTable("Votings") |> ignore
 
         )) |> ignore
-        modelBuilder.Entity("Database.Connection+Result", (fun b ->
-            b.HasOne("Database.Connection+Variant", "Variant")
-                .WithMany()
-                .HasForeignKey("VariantId")
-                |> ignore
-
-        )) |> ignore
         modelBuilder.Entity("Database.Connection+Variant", (fun b ->
             b.HasOne("Database.Connection+Voting", "Voting")
                 .WithMany()
@@ -394,6 +341,10 @@ type InitialCreate() =
 
         )) |> ignore
         modelBuilder.Entity("Database.Connection+Vote", (fun b ->
+            b.HasOne("Database.Connection+User", "User")
+                .WithMany()
+                .HasForeignKey("UserTelegramId")
+                |> ignore
             b.HasOne("Database.Connection+Variant", "Variant")
                 .WithMany()
                 .HasForeignKey("VariantId")

@@ -14,6 +14,12 @@ module Callback =
         | ForMason
         | Statistics
         | Voting
+        | CreateVoting
+        | ShowVotings
+        | ChooseImportantVotingType
+        | ChooseDefaultVotingType
+        | AcceptCreateVoting
+        | DiscardCreateVoting
 
     let string2SimpleCallbackContent str =
         match str with
@@ -28,6 +34,12 @@ module Callback =
         | "ForMason" -> Some ForMason
         | "Statistics" -> Some Statistics
         | "Voting" -> Some Voting
+        | "CreateVoting" -> Some CreateVoting
+        | "ShowVotings" -> Some ShowVotings
+        | "ChooseImportantVotingType" -> Some ChooseImportantVotingType
+        | "ChooseDefaultVotingType" -> Some ChooseDefaultVotingType
+        | "AcceptCreateVoting" -> Some AcceptCreateVoting
+        | "DiscardCreateVoting" -> Some DiscardCreateVoting
         | _ -> None
 
     let callbackContent2String content =
@@ -43,3 +55,9 @@ module Callback =
         | ForMason -> "ForMason"
         | Statistics -> "Statistics"
         | Voting -> "Voting"
+        | CreateVoting -> "CreateVoting"
+        | ShowVotings -> "ShowVotings"
+        | ChooseImportantVotingType -> "ChooseImportantVotingType"
+        | ChooseDefaultVotingType -> "ChooseDefaultVotingType"
+        | AcceptCreateVoting -> "AcceptCreateVoting"
+        | DiscardCreateVoting -> "DiscardCreateVoting"

@@ -1,6 +1,6 @@
 namespace TonApi
 
-module MasonNft =
+module MasonNft = // TODO: Переписать на TypeProvider?
 
     type Collection = {
         address: string

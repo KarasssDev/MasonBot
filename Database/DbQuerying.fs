@@ -99,7 +99,8 @@ module DbQuerying =
             Duration = duration
         }
         ctx.Votings.Add voting |> logDbCreate requestName
-        ctx.SaveChanges()
+        ctx.SaveChanges() |> ignore
+        voting
 
     // Variants
     let getVariants (ctx: MasonDbContext) (voting: Voting) =
@@ -114,13 +115,13 @@ module DbQuerying =
     let createVariants (ctx: MasonDbContext) (voting: Voting) (descriptions: string seq) =
         let requestName = "Create variants"
         logDbRequest requestName <| Some [$"voting={voting}"; $"descriptions={Seq.toList descriptions}"]
-        Seq.map (fun d ->
+        Seq.iter (fun d ->
             ctx.Variants.Add {
                 Id = Guid.NewGuid()
                 Description = d
                 Voting = voting
             } |> logDbCreate requestName
-        ) descriptions |> ignore
+        ) descriptions
         ctx.SaveChanges()
 
     // Votes
@@ -133,12 +134,13 @@ module DbQuerying =
             select vote
         } |> Seq.toList |> logDbGet requestName
 
-    let createVotes (ctx: MasonDbContext) (variant: Variant) (nfts: string seq) =
+    let createVotes (ctx: MasonDbContext) (user: User) (variant: Variant) (nfts: string seq) =
         let requestName = "Create votes"
         logDbRequest requestName <| Some [$"variant={variant}"; $"nfts={Seq.toList nfts}"]
         Seq.map (fun nft ->
             ctx.Votes.Add {
                 Id = Guid.NewGuid()
+                User = user
                 Variant = variant
                 NftAddress = nft
             } |> logDbCreate requestName
@@ -154,22 +156,3 @@ module DbQuerying =
         ) votes |> ignore
         ctx.SaveChanges()
 
-    // Results
-    let getResult (ctx: MasonDbContext) (variant: Variant) =
-        let requestName = "Get result"
-        logDbRequest requestName <| Some [$"variant={variant}"]
-        query {
-            for result in ctx.Results do
-            where (result.Variant = variant)
-            select result
-        } |> Seq.toList |> logDbGet requestName
-
-    let createResult (ctx: MasonDbContext) (variant: Variant) (cnt: int) =
-        let requestName = "Create result"
-        logDbRequest requestName <| Some [$"variant={variant}"; $"cnt={cnt}"]
-        {
-            Id = Guid.NewGuid()
-            Variant = variant
-            Count = cnt
-        } |> ctx.Results.Add |> logDbCreate requestName
-        ctx.SaveChanges ()

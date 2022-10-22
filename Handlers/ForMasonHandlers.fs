@@ -10,7 +10,7 @@ open Handlers.Content
 open MasonCore
 open Microsoft.FSharp.Core
 
-module ForMasonHandlers = // TODO
+module ForMasonHandlers =
 
 
 
@@ -39,7 +39,7 @@ module ForMasonHandlers = // TODO
                 <| ctx.Config
             | Error err ->
                 sendMessage from.Id
-                <| ("TODO match error", ParseMode.Markdown)
+                <| (defaultHandleQueryingError err, ParseMode.Markdown)
                 <| None
                 <| Some Keyboard.welcomeKeyboard
                 <| ctx.Config
@@ -48,7 +48,7 @@ module ForMasonHandlers = // TODO
 
     let handleStatistics(ctx: UpdateContext) =
 
-        let statisticFormatter (stat: Dictionary<BlockchainTypes.WalletAddress, _>) =
+        let statisticFormatter (stat: Dictionary<BlockchainTypes.WalletAddress, _>) = // TODO: исправить этот ужас
             let users = Querying.getAllUsers () |> Set.filter (fun u -> Option.isSome u.Wallet)
             let usersDict = users |> Set.toList |> List.map (fun u -> KeyValuePair(u.Wallet.Value, u.TelegramId)) |> Dictionary
             let usersWallet = users |> Set.map (fun x -> x.Wallet) |> Set.filter Option.isSome
@@ -75,7 +75,12 @@ module ForMasonHandlers = // TODO
                     <| None
                     <| Some Keyboard.forMasonKeyboard
                     <| ctx.Config
-                | Error err -> ()
+                | Error err ->
+                    sendMessage from.Id
+                    <| (defaultHandleQueryingError err, ParseMode.Markdown)
+                    <| None
+                    <| Some Keyboard.forMasonKeyboard
+                    <| ctx.Config
             | Ok _ ->
                 sendMessage from.Id
                 <| (Text.accessDeniedHolder, ParseMode.Markdown)
@@ -84,7 +89,7 @@ module ForMasonHandlers = // TODO
                 <| ctx.Config
             | Error err ->
                 sendMessage from.Id
-                <| ("TODO match error", ParseMode.Markdown)
+                <| (defaultHandleQueryingError err, ParseMode.Markdown)
                 <| None
                 <| Some Keyboard.welcomeKeyboard
                 <| ctx.Config

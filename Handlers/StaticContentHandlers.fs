@@ -43,82 +43,20 @@ module StaticContentHandlers =
                 HandlingResult.Success
             | None -> HandlingResult.Fail
 
-    let handleHowToMason(ctx: UpdateContext) =
-
-        let handlingCallback = HowToMason
-        let handlerName = "How to Mason"
-
+    let private staticContentHandler handlerName handlingCallback message keyboard (ctx: UpdateContext) =
         match (matchSimpleCallbackMessage handlingCallback ctx) with
         | Some from ->
             logCallback handlerName from.Id handlingCallback
             sendMessage from.Id
-            <| (howToMasonMessage, ParseMode.Markdown)
+            <| (message, ParseMode.Markdown)
             <| None
-            <| Some Keyboard.howToMasonKeyboard
+            <| Some keyboard
             <| ctx.Config
             HandlingResult.Success
         | None -> HandlingResult.Fail
 
-    let handleWhatIsMason(ctx: UpdateContext)  =
-
-        let handlingCallback = WhatIsMason
-        let handlerName = "What is Mason"
-
-        match (matchSimpleCallbackMessage handlingCallback ctx) with
-        | Some from ->
-            logCallback handlerName from.Id handlingCallback
-            sendMessage from.Id
-            <| (whatIsMasonMessage, ParseMode.Markdown)
-            <| None
-            <| Some Keyboard.welcomeKeyboard
-            <| ctx.Config
-            HandlingResult.Success
-        | None -> HandlingResult.Fail
-
-    let handleBuyTon(ctx: UpdateContext)  =
-
-        let handlingCallback = BuyTon
-        let handlerName = "Buy Ton"
-
-        match (matchSimpleCallbackMessage handlingCallback ctx) with
-        | Some from ->
-            logCallback handlerName from.Id handlingCallback
-            sendMessage from.Id
-            <| (buyTonMessage, ParseMode.Markdown)
-            <| None
-            <| Some Keyboard.howToMasonKeyboard
-            <| ctx.Config
-            HandlingResult.Success
-        | None -> HandlingResult.Fail
-
-    let handleAboutNFT(ctx: UpdateContext)  =
-
-        let handlingCallback = AboutNFT
-        let handlerName = "About NFT"
-
-        match (matchSimpleCallbackMessage handlingCallback ctx) with
-        | Some from ->
-            logCallback handlerName from.Id handlingCallback
-            sendMessage from.Id
-            <| (aboutNftMessage, ParseMode.Markdown)
-            <| None
-            <| Some Keyboard.howToMasonKeyboard
-            <| ctx.Config
-            HandlingResult.Success
-        | None -> HandlingResult.Fail
-
-    let handleBuyMasonNFT(ctx: UpdateContext)  =
-
-        let handlingCallback = BuyMasonNFT
-        let handlerName = "Buy Mason NFT"
-
-        match (matchSimpleCallbackMessage handlingCallback ctx) with
-        | Some from ->
-            logCallback handlerName from.Id handlingCallback
-            sendMessage from.Id
-            <| (buyMasonNftMessage, ParseMode.Markdown)
-            <| None
-            <| Some Keyboard.howToMasonKeyboard
-            <| ctx.Config
-            HandlingResult.Success
-        | None -> HandlingResult.Fail
+    let handleHowToMason = staticContentHandler "How to Mason" HowToMason howToMasonMessage Keyboard.howToMasonKeyboard
+    let handleWhatIsMason = staticContentHandler "What is Mason" WhatIsMason whatIsMasonMessage Keyboard.welcomeKeyboard
+    let handleBuyTon = staticContentHandler "Buy Ton" BuyTon buyTonMessage Keyboard.howToMasonKeyboard
+    let handleAboutNFT = staticContentHandler "About NFT" AboutNFT aboutNftMessage Keyboard.howToMasonKeyboard
+    let handleBuyMasonNFT = staticContentHandler "Buy Mason NFT" BuyMasonNFT buyMasonNftMessage Keyboard.howToMasonKeyboard

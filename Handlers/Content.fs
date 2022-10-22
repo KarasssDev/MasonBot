@@ -33,6 +33,12 @@ module Content =
         let buyTon = $"{Text.infoEmoji} Как купить TON?", BuyTon
         let aboutNft = $"{Text.infoEmoji} Всё об NFT", AboutNFT
         let buyMasonNft = $"{Text.infoEmoji} Как купить NFT TON MASON?", BuyMasonNFT
+        let createVoting = "Создать голосование", CreateVoting
+        let showVotings = "Посмотреть голосования", ShowVotings
+        let chooseImportant = "Важное", ChooseImportantVotingType
+        let chooseDefault = "Обычное", ChooseDefaultVotingType
+        let acceptCreateVoting = "Создать", AcceptCreateVoting
+        let discardCreateVoting = "Отмена", DiscardCreateVoting
 
     module Keyboard =
             let forMasonKeyboard = createInlineKeyboard [|
@@ -56,11 +62,22 @@ module Content =
                 [| Button.start |]
             |]
             let votingKeyboard = createInlineKeyboard [|
+                [| Button.showVotings |]
+                [| Button.createVoting |]
                 [| Button.start |]
             |]
+            let chooseVotingTypeKeyboard = createInlineKeyboard [|
+                [| Button.chooseImportant |]
+                [| Button.chooseDefault |]
+                [| Button.start |]
+            |]
+            let acceptVoteCreatingKeyboard = createInlineKeyboard [|
+                [| Button.acceptCreateVoting |]
+                [| Button.discardCreateVoting |]
+            |]
+
     let mutable token = ""
     let mutable logFileWriter = Unchecked.defaultof<StreamWriter>
-
     let mutable welcomeMessage = ""
     let mutable welcomePhoto = fun () -> Funogram.Telegram.Types.File ("welcome", File.OpenRead($"{Paths.staticContentPath()}welcomePicture.png"))
     let mutable howToMasonMessage = ""

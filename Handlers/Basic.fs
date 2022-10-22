@@ -11,6 +11,7 @@ open MasonCore
 
 module Basic =
 
+    // Matchers
     let matchTextMessage expectedText ctx =
         let message = ctx.Update.Message
         match message with
@@ -18,7 +19,7 @@ module Basic =
             if text = expectedText then Some chat else None
         | _ -> None
 
-    let matchAnyMessage ctx =
+    let matchAnyMessage ctx = // TODO: delete this
         let message = ctx.Update.Message
         match message with
         | Some {Chat = chat; Text = Some text} ->
@@ -38,12 +39,16 @@ module Basic =
             | _ -> None
         | _ -> None
 
-    type TestMode =
-        | Enabled
-        | Disabled
-    let mutable testMode  = Disabled
-    let mutable lastSentMessage = None
+    let matchStateWithTextMessage expectedState ctx =
+        let message = ctx.Update.Message
+        match message with
+        | Some {Chat = chat; Text = Some text } ->
+            match Runtime.getState chat.Id with
+            | Some state -> if state = expectedState then Some (chat, text) else None
+            | _ -> None
+        | _ -> None
 
+    // Handler processing
     type HandlingResult =
         | Success
         | Fail
@@ -70,18 +75,14 @@ module Basic =
     let private botResult config data = api config data |> Async.RunSynchronously
     let private bot config data = botResult config data |> processResult
 
-
     let sendMessage (chatId: int64) (text, parseMode) photo replyMarkup config =
-        match testMode with
-        | Enabled -> lastSentMessage <- Some (text, parseMode, replyMarkup)
-        | Disabled ->
-            match (photo, replyMarkup) with
-            | Some content, Some markup ->
-                Req.SendPhoto.Make(chatId, content, caption = text, parseMode = parseMode, replyMarkup = markup) |> bot config
-            | Some content, None ->
-                Req.SendPhoto.Make(chatId, content, caption = text, parseMode = parseMode) |> bot config
-            | None, Some markup -> Req.SendMessage.Make(ChatId.Int chatId, text, replyMarkup = markup) |> bot config
-            | None, None -> Req.SendMessage.Make(ChatId.Int chatId, text, parseMode = parseMode) |> bot config
+        match (photo, replyMarkup) with
+        | Some content, Some markup ->
+            Req.SendPhoto.Make(chatId, content, caption = text, parseMode = parseMode, replyMarkup = markup) |> bot config
+        | Some content, None ->
+            Req.SendPhoto.Make(chatId, content, caption = text, parseMode = parseMode) |> bot config
+        | None, Some markup -> Req.SendMessage.Make(ChatId.Int chatId, text, replyMarkup = markup) |> bot config
+        | None, None -> Req.SendMessage.Make(ChatId.Int chatId, text, parseMode = parseMode) |> bot config
 
     // Keyboard interaction
     let private sendMessageMarkup text replyMarkup config (chatId: int64) =
@@ -125,8 +126,6 @@ module Basic =
         match err with
         | Querying.ApiError ->
             "Мы не можем обработать ваш запрос, так как TonApi в данный момент не работает, попробуйте позже("
-        | Querying.UnexpectedError ->
-            "Если вы видите это сообщение значит что-то пошло не так"
         | err ->
             Logging.logError $"Unexpected error {err}"
-            ""
+            "Если вы видите это сообщение значит что-то пошло не так"

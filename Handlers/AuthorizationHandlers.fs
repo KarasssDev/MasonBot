@@ -15,7 +15,7 @@ open Logging
 open MasonCore
 open TonApi
 
-module AuthorizationHandlers = // TODO unhardcodig
+module AuthorizationHandlers = // TODO unhardcodig + пееписать на State
 
     let private AUTH_SUM = 10000000UL
     let private authorizationStartMessage =
@@ -38,22 +38,20 @@ module AuthorizationHandlers = // TODO unhardcodig
         let query = [ $"amount={AUTH_SUM}"; $"text={mes}" ]
         let sep = "&"
         $"{domain}/{path}?{query |> String.concat sep}"
-        
+
     let private generateQR (mes: string) =
         use qrGen = new QRCodeGenerator()
         let qrData = qrGen.CreateQrCode(mes, QRCodeGenerator.ECCLevel.Q)
         use qrCode = new PngByteQRCode(qrData)
         let bytes = qrCode.GetGraphic(10)
         Funogram.Telegram.Types.File ("Authorization QR-code", new MemoryStream(bytes))
-    
+
     let private updateRuntime (from: User) mes =
         let id = from.Id
-        let info = Runtime.getOrDefault id
         let authInfo = {
             Runtime.AuthorizationInfo.message = mes
         }
-        {info with authorizationInfo = Some authInfo}
-        |> Runtime.update id
+        Runtime.update id <| fun i -> {i with authorizationInfo = Some authInfo}
 
 
     let handleAuthorizationStart(ctx: UpdateContext) =
@@ -69,28 +67,28 @@ module AuthorizationHandlers = // TODO unhardcodig
                 let mes = generateMessage from
                 updateRuntime from mes
                 logCallback handlerName from.Id handlingCallback
-                
+
                 sendMessage from.Id
                 <| ($"{authorizationStartMessage}", ParseMode.Markdown)
                 <| None
                 <| None
                 <| ctx.Config
-                
+
                 let link = generateLink mes
-                let qr = generateQR link   
+                let qr = generateQR link
                 sendMessage from.Id
                 <| ($"{link}", ParseMode.Markdown)
                 <| Some qr
                 <| None
                 <| ctx.Config
-                    
+
                 sendMessage from.Id
                 <| ("Отправьте идентификатор транзакции после завершения ее обработки. Если вы уже совершали транзакцию и что-то пошло не так, то можете отправить ее идентификатор",
                     ParseMode.Markdown)
                 <| None
                 <| None
                 <| ctx.Config
-                
+
                 Logging.logDebug $"[{from.Id}] got authorization message: [{mes}]"
             | Error err ->
                 let mes = defaultHandleQueryingError err
@@ -110,8 +108,8 @@ module AuthorizationHandlers = // TODO unhardcodig
             HandlingResult.Success
         | None -> HandlingResult.Fail
 
-    let handleAuthorizationVerification(ctx: UpdateContext) =
-        let handlingCallback = AuthorizationVerification
+    let handleAuthorizationVerification(ctx: UpdateContext) = // TODO: нормальные логи
+        let handlingCallback = AuthorizationVerification // мы не хендлим тут callback, а просто проверяем, что это сообщение
         let handlerName = "AuthorizationVerification"
         match (matchAnyMessage ctx) with
         | Some from, Some hash ->
@@ -122,7 +120,7 @@ module AuthorizationHandlers = // TODO unhardcodig
                 HandlingResult.Fail
             else
                 Logging.logDebug $"[{from.Id}] is verifying wallet with transaction hash [{hash}]"
-                logCallback handlerName from.Id handlingCallback
+                logCallback handlerName from.Id handlingCallback // Тут, соответственно, мы логируем, что это сообщение, а не callback
                 let info = Runtime.getOrDefault from.Id
                 let mes = info.authorizationInfo.Value.message.Trim()
 

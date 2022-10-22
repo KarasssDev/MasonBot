@@ -1,5 +1,6 @@
 namespace Handlers
 
+open System
 open Database
 open Funogram.Telegram.Types
 open MasonCore
@@ -7,6 +8,7 @@ open TonApi
 
 module Querying =
 
+    // Result monad
     let (>>=) (m: Result<'a, 'e>) (f: 'a -> Result<'b, 'e>) = Result.bind f m
     let (>=>) (f1: 'a -> Result<'b, 'e>) (f2: 'b -> Result<'c, 'e>) = fun x -> f1 x >>= f2
 
@@ -17,23 +19,24 @@ module Querying =
 
     let result = ResultBuilder()
 
+    // Error helpers
     type Error =
         | ApiError
         | UnexpectedError
         | UserNotFound
 
-    let toApiError v =
+    let private toApiError v =
         match v with
         | Some v -> Ok v
         | None -> Error ApiError
 
-    let oneOf errorEmpty errorMany lst =
+    let private oneOf errorEmpty errorMany lst =
         match lst with
         | [x] -> Ok x
         | [] -> Error errorEmpty
         | _ -> Error errorMany
 
-    let nonEmpty errorEmpty lst =
+    let private nonEmpty errorEmpty lst =
         match lst with
         | [] -> Error errorEmpty
         | _ -> Ok lst
@@ -85,4 +88,18 @@ module Querying =
         result {
             let! rawStatistic = TonApiQuerying.getStatistics () |> toApiError
             return formatter rawStatistic
+        }
+
+    // Votings
+    let createVoting (userId: int64) (description: string) (variantDescriptions: string list) (isImportant: bool) =
+        use ctx = new Connection.MasonDbContext()
+
+        let duration = if isImportant then TimeSpan(3,0,0,0) else TimeSpan(7,0,0,0) // TODO: move it
+        let currentDate = DateTime.Now
+
+        result {
+            let! user = DbQuerying.getUser ctx userId |> oneOf UserNotFound UnexpectedError
+            let voting = DbQuerying.createVoting ctx user description currentDate duration
+            DbQuerying.createVariants ctx voting variantDescriptions |> ignore
+            return ()
         }

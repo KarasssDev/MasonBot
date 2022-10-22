@@ -34,16 +34,11 @@ module Connection =
     [<CLIMutable>]
     type Vote = {
         [<Key>] Id: Guid
+        User: User
         Variant: Variant
         NftAddress: string
     }
 
-    [<CLIMutable>]
-    type Result = {
-        [<Key>] Id: Guid
-        Variant: Variant
-        Count: int
-    }
 
     type MasonDbContext() =
         inherit DbContext()
@@ -59,8 +54,6 @@ module Connection =
 
         [<DefaultValue>] val mutable votes : DbSet<Vote>
         member this.Votes with get() = this.votes and set v = this.votes <- v
-        [<DefaultValue>] val mutable results: DbSet<Result>
-        member this.Results with get() = this.results and set v = this.results <- v
 
 
         override _.OnModelCreating builder =
@@ -68,8 +61,9 @@ module Connection =
 
         override _.OnConfiguring(options: DbContextOptionsBuilder) : unit =
             #if DEBUG
-            Paths.configureDataPath ""
+            Paths.configureDataPath "/home/viktor/RiderProjects/MasonBot/data/"
             #endif
+            printfn $"{Paths.databasePath()}"
             options.UseSqlite($"Data Source={Paths.databasePath()}").UseFSharpTypes() |> ignore
 
 
