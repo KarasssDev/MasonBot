@@ -127,14 +127,9 @@ module AuthorizationHandlers = // TODO unhardcodig + пееписать на Sta
                 let ansMes =
                     match Querying.verifyTransaction mes AUTH_SUM hash with
                     | Ok (true, wallet) ->
-                        match Querying.updateUserWallet from.Id wallet with
-                        | Ok _ ->
-                            Logging.logInfo $"[{from.Id}] is verified with wallet [{wallet}]"
-                            "Вы успешно авторизовались!"
-                        | Error err ->
-                            let mes = defaultHandleQueryingError err
-                            Logging.logError $"Verification error: on update [{from.Id}] wallet to [{wallet}] with [{mes}]"
-                            mes
+                        Querying.updateUserWallet from.Id wallet |> ignore
+                        "Вы успешно авторизовались!"
+
                     | Ok (false, _) ->
                         Logging.logDebug $"[{from.Id}] typed invalid transaction with hash [{hash}]"
                         "Указанная транзакция не соответствует запрашиваемой, проверьте адресата или указанное сообщение"

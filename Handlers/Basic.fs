@@ -39,6 +39,31 @@ module Basic =
             | _ -> None
         | _ -> None
 
+    let matchCallbackMessage ctx =
+        let callback = ctx.Update.CallbackQuery
+        match callback with
+        | Some { Data = Some data; From = from} ->
+            let content = Callback.string2SimpleCallbackContent data
+            match content with
+            | Some callbackData ->
+                Some (from, callbackData)
+            | _ -> None
+        | _ -> None
+
+    let matchStateWithSimpleCallback expectedState expectedCallback ctx =
+        let callback = ctx.Update.CallbackQuery
+        match callback with
+        | Some { Data = Some data; From = from} ->
+            let content = Callback.string2SimpleCallbackContent data
+            let state = Runtime.getState from.Id
+            match (content, state) with
+            | Some callbackData, Some state ->
+                if callbackData = expectedCallback && state = expectedState
+                then Some from
+                else None
+            | _ -> None
+        | _ -> None
+
     let matchStateWithTextMessage expectedState ctx =
         let message = ctx.Update.Message
         match message with

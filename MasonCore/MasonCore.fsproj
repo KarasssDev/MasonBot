@@ -9,7 +9,6 @@
     <ItemGroup>
         <Compile Include="BlockchainTypes.fs" />
         <Compile Include="UserTypes.fs" />
-        <Compile Include="VotingTypes.fs" />
         <Compile Include="Paths.fs" />
     </ItemGroup>
 

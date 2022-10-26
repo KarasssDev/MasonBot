@@ -42,14 +42,11 @@ module Querying =
         | _ -> Ok lst
 
     // Users
-    let getAllUsers () =
-        use ctx = new Connection.MasonDbContext()
-        DbQuerying.getAllUsers ctx |> Set
+    let getAllUsers = DbQuerying.getAllUsers
 
     let getUser (telegramId: int64) =
-        use ctx = new Connection.MasonDbContext()
         result {
-            let! user = DbQuerying.getUser ctx telegramId |> oneOf UserNotFound UnexpectedError
+            let user = DbQuerying.getUser telegramId
             match user.Wallet with
             | Some w ->
                 let! nftCount = TonApiQuerying.getNftsCount w |> toApiError
@@ -58,23 +55,16 @@ module Querying =
                 return UserTypes.mkUser user.TelegramId None user.Wallet
         }
 
-    let userExist (telegramId: int64) =
+    let createUser (telegramId: int64) wallet =
         use ctx = new Connection.MasonDbContext()
-        let user = DbQuerying.getUser ctx telegramId
-        match user with
-        | [_] -> true
-        | _ -> false
-
-    let createUser telegramId wallet =
-        use ctx = new Connection.MasonDbContext()
-        DbQuerying.createUser ctx telegramId wallet
+        if DbQuerying.userExist telegramId then ()
+        else DbQuerying.createUser ctx telegramId wallet
 
     let updateUserWallet telegramId wallet =
         use ctx = new Connection.MasonDbContext()
-        result {
-            let! user = DbQuerying.getUser ctx telegramId |> oneOf UserNotFound UnexpectedError
-            return DbQuerying.updateUserWallet ctx user wallet
-        }
+        let user = DbQuerying.getUser telegramId
+        DbQuerying.updateUserWallet ctx user wallet
+
 
     // Authorization
     let verifyTransaction message amount hash =
@@ -98,8 +88,22 @@ module Querying =
         let currentDate = DateTime.Now
 
         result {
-            let! user = DbQuerying.getUser ctx userId |> oneOf UserNotFound UnexpectedError
-            let voting = DbQuerying.createVoting ctx user description currentDate duration
-            DbQuerying.createVariants ctx voting variantDescriptions |> ignore
+            let user = DbQuerying.getUser userId
+            let variants = DbQuerying.createVariants ctx variantDescriptions
+            return DbQuerying.createVoting ctx user description variants currentDate duration
+        }
+
+    let getVotings = DbQuerying.getAllVotings
+    let getVoting id = DbQuerying.getVoting id
+
+    let vote userId variantId =
+        use ctx = new Connection.MasonDbContext()
+        result {
+            let user = DbQuerying.getUser userId
+            let variant = DbQuerying.getVariant variantId
+            let! wallet = user.Wallet |> toApiError // TODO: fix it
+            let! nfts = TonApiQuerying.getNftsAddresses wallet |> toApiError
+            DbQuerying.deleteVotesByNfts ctx variant nfts
+            DbQuerying.createVotes ctx user variant nfts
             return ()
         }

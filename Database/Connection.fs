@@ -15,20 +15,18 @@ module Connection =
         Wallet: string option
     }
 
-    [<CLIMutable>]
-    type Voting = {
+    and [<CLIMutable>] Voting = {
         [<Key>] Id: Guid
         Creator: User
         Description: string
         StartDate: DateTime
         Duration: TimeSpan
+        Variants: Variant seq
     }
 
-    [<CLIMutable>]
-    type Variant = {
+    and [<CLIMutable>] Variant = {
         [<Key>] Id: Guid
         Description: string
-        Voting: Voting
     }
 
     [<CLIMutable>]
@@ -39,6 +37,12 @@ module Connection =
         NftAddress: string
     }
 
+    type DbCache = {
+        Users: Collections.Concurrent.ConcurrentDictionary<int64, User>
+        Votings: Collections.Concurrent.ConcurrentDictionary<Guid, Voting>
+        Variants: Collections.Concurrent.ConcurrentDictionary<Guid, Variant>
+        Votes: Collections.Concurrent.ConcurrentDictionary<Guid, Vote>
+    }
 
     type MasonDbContext() =
         inherit DbContext()
@@ -58,13 +62,20 @@ module Connection =
 
         override _.OnModelCreating builder =
             builder.RegisterOptionTypes()
+            builder.Entity<Voting>().Navigation<Variant seq>(fun x -> x.Variants).AutoInclude() |> ignore
+            builder.Entity<Voting>().Navigation(fun x -> x.Creator).AutoInclude() |> ignore
+            builder.Entity<Vote>().Navigation(fun x -> x.User).AutoInclude() |> ignore
+            builder.Entity<Vote>().Navigation(fun x -> x.Variant).AutoInclude() |> ignore
 
         override _.OnConfiguring(options: DbContextOptionsBuilder) : unit =
             #if DEBUG
-            Paths.configureDataPath "/home/viktor/RiderProjects/MasonBot/data/"
+            Paths.configureDataPath ""
             #endif
-            printfn $"{Paths.databasePath()}"
-            options.UseSqlite($"Data Source={Paths.databasePath()}").UseFSharpTypes() |> ignore
+            Logging.Logging.logDebug $"Database path: {Paths.databasePath()}"
+            options
+                //.LogTo(Action<string> (fun x -> printfn $"{x}"))
+                .UseSqlite($"Data Source={Paths.databasePath()}")
+                .UseFSharpTypes() |> ignore
 
 
 

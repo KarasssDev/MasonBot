@@ -10,7 +10,7 @@ open Microsoft.EntityFrameworkCore.Migrations
 open Microsoft.EntityFrameworkCore.Storage.ValueConversion
 
 [<DbContext(typeof<Connection.MasonDbContext>)>]
-[<Migration("20221022230951_InitialCreate")>]
+[<Migration("20221025173624_InitialCreate")>]
 type InitialCreate() =
     inherit Migration()
 
@@ -334,8 +334,8 @@ type InitialCreate() =
 
         )) |> ignore
         modelBuilder.Entity("Database.Connection+Variant", (fun b ->
-            b.HasOne("Database.Connection+Voting", "Voting")
-                .WithMany()
+            b.HasOne("Database.Connection+Voting", null)
+                .WithMany("Variants")
                 .HasForeignKey("VotingId")
                 |> ignore
 
@@ -357,5 +357,10 @@ type InitialCreate() =
                 .HasForeignKey("CreatorTelegramId")
                 |> ignore
 
+        )) |> ignore
+        modelBuilder.Entity("Database.Connection+Voting", (fun b ->
+
+            b.Navigation("Variants")
+            |> ignore
         )) |> ignore
 

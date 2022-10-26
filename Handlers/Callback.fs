@@ -1,5 +1,6 @@
 namespace Handlers
 
+
 module Callback =
 
     type CallbackContent =
@@ -20,6 +21,25 @@ module Callback =
         | ChooseDefaultVotingType
         | AcceptCreateVoting
         | DiscardCreateVoting
+        | ShowVoting of System.Guid
+        | MakeVoteVoting of System.Guid
+        | MakeVoteVariant of System.Guid
+
+    let private callBackWithGuid baseStr (ctx: Funogram.Telegram.Bot.UpdateContext) =
+        ctx.Update.CallbackQuery
+        |> Option.bind (fun x ->
+            match x.Data with
+            | Some d -> Some (d, x.From)
+            | None -> None
+        )
+        |> Option.bind (fun (x, u: Funogram.Telegram.Types.User) ->
+            match x.Split() with
+            | [| str; guid |] when str = baseStr -> Some (u, System.Guid guid)
+            | _ -> None
+        )
+    let (|ShowVotingCallback|_|) = callBackWithGuid "ShowVoting"
+    let (|MakeVoteVotingCallback|_|) = callBackWithGuid "MakeVoteVoting"
+    let (|MakeVoteVariantCallback|_|) = callBackWithGuid "MakeVoteVariant"
 
     let string2SimpleCallbackContent str =
         match str with
@@ -61,3 +81,6 @@ module Callback =
         | ChooseDefaultVotingType -> "ChooseDefaultVotingType"
         | AcceptCreateVoting -> "AcceptCreateVoting"
         | DiscardCreateVoting -> "DiscardCreateVoting"
+        | ShowVoting guid -> $"ShowVoting {guid}"
+        | MakeVoteVoting guid -> $"MakeVoteVoting {guid}"
+        | MakeVoteVariant guid -> $"MakeVoteVariant {guid}"

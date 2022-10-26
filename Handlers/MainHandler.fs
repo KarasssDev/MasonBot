@@ -20,6 +20,10 @@ module MainHandler =
                 VotingHandlers.handleCreateVariant
                 VotingHandlers.handleAccept
                 VotingHandlers.handleDiscard
+                VotingHandlers.handleShowVotings
+                VotingHandlers.handleShowVoting
+                VotingHandlers.handleMakeVote
+                VotingHandlers.handleMakeVoteVariant
                 StaticContentHandlers.handleStart
                 StaticContentHandlers.handleHowToMason
                 StaticContentHandlers.handleWhatIsMason
@@ -38,4 +42,4 @@ module MainHandler =
                 match ctx.Update.CallbackQuery with
                 | Some c -> Logging.logError $"Unhandled callback\n {c.Data}"
                 | None -> ()
-        with ex -> Logging.logError $"Unhandled exception {ex.Message}"
+        with ex -> Logging.logError $"Unhandled exception {ex.Message}, {ex.StackTrace}"

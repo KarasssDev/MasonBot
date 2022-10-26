@@ -10,9 +10,9 @@ module Program =
     let main _ =
 
         #if DEBUG
-        Paths.configureDataPath ""
-        Paths.configureLogPath ""
-        Paths.configureSecretsPath ""
+        Paths.configureDataPath "/home/viktor/RiderProjects/MasonBot/data/"
+        Paths.configureLogPath "/home/viktor/RiderProjects/MasonBot/logs/"
+        Paths.configureSecretsPath "/home/viktor/RiderProjects/MasonBot/secrets/"
         Logging.configureWriter System.Console.Out
         Logging.configureLogLevel Logging.Debug
         #endif
@@ -27,6 +27,7 @@ module Program =
         let readyToStart = contentUploaded && contentExist
 
         if readyToStart then
+            Database.DbQuerying.initCaches ()
             Logging.logInfo "Bot started"
             BotLauncher.startBot ()
         else 1

@@ -24,8 +24,4 @@
       <ProjectReference Include="..\Logging\Logging.fsproj" />
       <ProjectReference Include="..\MasonCore\MasonCore.fsproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Migrations" />
-    </ItemGroup>
 </Project>

@@ -8,6 +8,8 @@ module Runtime =
 
     // State
     type State =
+        // Voting states
+        | WaitChooseVotingType
         | WaitVotingDescription
         | WaitVotingVariant
         | WaitAcceptVotingCreation

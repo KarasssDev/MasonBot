@@ -143,8 +143,8 @@ type MasonDbContextModelSnapshot() =
 
         )) |> ignore
         modelBuilder.Entity("Database.Connection+Variant", (fun b ->
-            b.HasOne("Database.Connection+Voting", "Voting")
-                .WithMany()
+            b.HasOne("Database.Connection+Voting", null)
+                .WithMany("Variants")
                 .HasForeignKey("VotingId")
                 |> ignore
 
@@ -166,5 +166,10 @@ type MasonDbContextModelSnapshot() =
                 .HasForeignKey("CreatorTelegramId")
                 |> ignore
 
+        )) |> ignore
+        modelBuilder.Entity("Database.Connection+Voting", (fun b ->
+
+            b.Navigation("Variants")
+            |> ignore
         )) |> ignore
 

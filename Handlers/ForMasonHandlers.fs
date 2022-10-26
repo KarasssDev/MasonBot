@@ -49,12 +49,12 @@ module ForMasonHandlers =
     let handleStatistics(ctx: UpdateContext) =
 
         let statisticFormatter (stat: Dictionary<BlockchainTypes.WalletAddress, _>) = // TODO: исправить этот ужас
-            let users = Querying.getAllUsers () |> Set.filter (fun u -> Option.isSome u.Wallet)
-            let usersDict = users |> Set.toList |> List.map (fun u -> KeyValuePair(u.Wallet.Value, u.TelegramId)) |> Dictionary
-            let usersWallet = users |> Set.map (fun x -> x.Wallet) |> Set.filter Option.isSome
+            let users = Querying.getAllUsers () |> List.filter (fun u -> Option.isSome u.Wallet)
+            let usersDict = users  |> List.map (fun u -> KeyValuePair(u.Wallet.Value, u.TelegramId)) |> Dictionary
+            let usersWallet = users |> List.map (fun x -> x.Wallet) |> List.filter Option.isSome
             stat
             |> Seq.sortBy (fun (KeyValue(k, _)) -> k)
-            |> Seq.filter (fun (KeyValue(k, _)) -> usersWallet.Contains (Some k))
+            |> Seq.filter (fun (KeyValue(k, _)) -> List.contains (Some k) usersWallet)
             |> Seq.map (fun (KeyValue(k, v)) -> $"{usersDict[k]}: {v}")
             |> String.concat ""
 

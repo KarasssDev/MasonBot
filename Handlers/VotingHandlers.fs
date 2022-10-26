@@ -23,7 +23,7 @@ module VotingHandlers = // TODO
             match user with
             | Ok (UserTypes.Master _) | Ok (UserTypes.Holder _) ->
                 sendMessage from.Id
-                <| ("TODO message", ParseMode.Markdown)
+                <| ("TODO: Описание, что такое голосование", ParseMode.Markdown)
                 <| None
                 <| Some Keyboard.votingKeyboard
                 <| ctx.Config
@@ -42,7 +42,8 @@ module VotingHandlers = // TODO
             HandlingResult.Success
         | None -> HandlingResult.Fail
 
-    let handleCreateVoting(ctx: UpdateContext) = // TODO: add check last created voting1
+    // Voting create
+    let handleCreateVoting(ctx: UpdateContext) = // TODO: add check last created voting
 
         let handlingCallback = CreateVoting
         let handlerName = "Create voting"
@@ -55,8 +56,9 @@ module VotingHandlers = // TODO
             match user with
             | Ok (UserTypes.Master _) ->
                 Runtime.enableVotingCreating from.Id
+                Runtime.setState from.Id Runtime.WaitChooseVotingType
                 sendMessage from.Id
-                <| ("TODO message", ParseMode.Markdown)
+                <| ("TODO: описание типов голосований", ParseMode.Markdown)
                 <| None
                 <| Some Keyboard.chooseVotingTypeKeyboard
                 <| ctx.Config
@@ -85,7 +87,7 @@ module VotingHandlers = // TODO
            | ChooseImportantVotingType -> Runtime.Important
            | _ -> failwith $"Unexpected callback {handlingCallback}"
 
-        match (matchSimpleCallbackMessage handlingCallback ctx) with
+        match (matchStateWithSimpleCallback Runtime.WaitChooseVotingType handlingCallback ctx) with
         | Some from ->
             logCallback handlerName from.Id handlingCallback
 
@@ -180,7 +182,7 @@ module VotingHandlers = // TODO
                     | Runtime.Important -> "Важное"
                 let variantsText =
                     variants
-                    |> List.map (fun d -> $"[] {d}")
+                    |> List.mapi (fun i d -> $"[{i + 1}] {d}")
                     |> String.concat "\n"
                 $"Тип голосования: {votingTypeText}\nОписание: {description}\nВарианты:\n{variantsText}"
             | _ -> "Что-то пошло не так..." // TODO
@@ -249,7 +251,7 @@ module VotingHandlers = // TODO
                 | Runtime.Important -> (true, description, variants)
             | _ -> failwith "TODO: error message" // TODO
 
-        match (matchSimpleCallbackMessage handlingCallback ctx) with
+        match (matchStateWithSimpleCallback Runtime.WaitAcceptVotingCreation handlingCallback ctx) with
         | Some from ->
             logCallback handlerName from.Id handlingCallback
 
@@ -304,3 +306,166 @@ module VotingHandlers = // TODO
 
     let handleDiscard(ctx: UpdateContext) =
         handleAcceptVotingCreating ctx DiscardCreateVoting
+
+    // Voting watching
+    let handleShowVotings(ctx: UpdateContext) =
+
+        let handlingCallback = ShowVotings
+        let handlerName = "Show votings"
+
+        let renderKeyboard () =
+            let votings = Querying.getVotings ()
+            votings
+            |> List.map (fun v -> [|v.Description, ShowVoting v.Id|])
+            |> (fun x -> List.append x [[|"Назад", Voting|]])
+            |> List.toArray
+            |> createInlineKeyboard
+
+        match (matchSimpleCallbackMessage handlingCallback ctx) with
+        | Some from ->
+            logCallback handlerName from.Id handlingCallback
+
+            let user = Querying.getUser from.Id
+            match user with
+            | Ok (UserTypes.Master _) | Ok (UserTypes.Holder _) ->
+                sendMessage from.Id
+                <| ("TODO: Описание, что такое голосование", ParseMode.Markdown)
+                <| None
+                <| Some (renderKeyboard ())
+                <| ctx.Config
+            | Ok _ ->
+                sendMessage from.Id
+                <| (Text.accessDeniedHolder, ParseMode.Markdown)
+                <| None
+                <| Some Keyboard.forMasonKeyboard
+                <| ctx.Config
+            | Error err ->
+                sendMessage from.Id
+                <| (defaultHandleQueryingError err, ParseMode.Markdown)
+                <| None
+                <| Some Keyboard.forMasonKeyboard
+                <| ctx.Config
+            HandlingResult.Success
+        | None -> HandlingResult.Fail
+
+    let handleShowVoting(ctx: UpdateContext) =
+
+        let handlerName = "Show voting"
+
+        let renderMessage id = "Результаты тут"
+
+
+        let renderKeyboard id =
+            createInlineKeyboard [|
+                [| "Проголосовать", MakeVoteVoting id |]
+                [| "Назад", ShowVotings |]
+            |]
+
+        match ctx with
+        | ShowVotingCallback (us, guid) ->
+            logCallback handlerName us.Id ShowVotings
+
+            let user = Querying.getUser us.Id
+            match user with
+            | Ok (UserTypes.Master _) | Ok (UserTypes.Holder _) ->
+                sendMessage us.Id
+                <| (renderMessage guid, ParseMode.Markdown)
+                <| None
+                <| Some (renderKeyboard guid)
+                <| ctx.Config
+            | Ok _ ->
+                sendMessage us.Id
+                <| (Text.accessDeniedHolder, ParseMode.Markdown)
+                <| None
+                <| Some Keyboard.forMasonKeyboard
+                <| ctx.Config
+            | Error err ->
+                sendMessage us.Id
+                <| (defaultHandleQueryingError err, ParseMode.Markdown)
+                <| None
+                <| Some Keyboard.forMasonKeyboard
+                <| ctx.Config
+            HandlingResult.Success
+        | _ -> HandlingResult.Fail
+
+    let handleMakeVote(ctx: UpdateContext) =
+
+        let handlerName = "Make vote"
+
+        let renderMessage id = "TODO: описание"
+
+        let renderKeyboard id =
+            let voting = Querying.getVoting id
+            voting.Variants
+            |> Seq.map (fun x -> [|x.Description, MakeVoteVariant x.Id|])
+            |> Seq.toArray
+            |> (fun x -> Array.append x [|[|("Назад", ShowVoting id)|]|])
+            |> createInlineKeyboard
+
+        match ctx with
+        | MakeVoteVotingCallback (us, guid) ->
+            logCallback handlerName us.Id ShowVotings
+
+            let user = Querying.getUser us.Id
+            match user with
+            | Ok (UserTypes.Master _) | Ok (UserTypes.Holder _) ->
+                sendMessage us.Id
+                <| (renderMessage guid, ParseMode.Markdown)
+                <| None
+                <| Some (renderKeyboard guid)
+                <| ctx.Config
+            | Ok _ ->
+                sendMessage us.Id
+                <| (Text.accessDeniedHolder, ParseMode.Markdown)
+                <| None
+                <| Some Keyboard.forMasonKeyboard
+                <| ctx.Config
+            | Error err ->
+                sendMessage us.Id
+                <| (defaultHandleQueryingError err, ParseMode.Markdown)
+                <| None
+                <| Some Keyboard.forMasonKeyboard
+                <| ctx.Config
+            HandlingResult.Success
+        | _ -> HandlingResult.Fail
+
+    let handleMakeVoteVariant(ctx: UpdateContext) =
+
+        let handlerName = "Make vote variant"
+
+        let renderMessage id = "TODO: вы проголосвали"
+
+        match ctx with
+        | MakeVoteVariantCallback (us, guid) ->
+            logCallback handlerName us.Id ShowVotings
+
+            let user = Querying.getUser us.Id
+            match user with
+            | Ok (UserTypes.Master _) | Ok (UserTypes.Holder _) ->
+                match Querying.vote us.Id guid with
+                | Ok _ ->
+                    sendMessage us.Id
+                    <| (renderMessage guid, ParseMode.Markdown)
+                    <| None
+                    <| None
+                    <| ctx.Config
+                | Error err ->
+                    sendMessage us.Id
+                    <| (defaultHandleQueryingError err, ParseMode.Markdown)
+                    <| None
+                    <| Some Keyboard.forMasonKeyboard
+                    <| ctx.Config
+            | Ok _ ->
+                sendMessage us.Id
+                <| (Text.accessDeniedHolder, ParseMode.Markdown)
+                <| None
+                <| Some Keyboard.forMasonKeyboard
+                <| ctx.Config
+            | Error err ->
+                sendMessage us.Id
+                <| (defaultHandleQueryingError err, ParseMode.Markdown)
+                <| None
+                <| Some Keyboard.forMasonKeyboard
+                <| ctx.Config
+            HandlingResult.Success
+        | _ -> HandlingResult.Fail
