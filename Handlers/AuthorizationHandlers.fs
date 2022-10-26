@@ -127,7 +127,7 @@ module AuthorizationHandlers = // TODO unhardcodig + пееписать на Sta
                 let ansMes =
                     match Querying.verifyTransaction mes AUTH_SUM hash with
                     | Ok (true, wallet) ->
-                        Querying.updateUserWallet from.Id wallet |> ignore
+                        Querying.updateUserWallet from.Id wallet
                         "Вы успешно авторизовались!"
 
                     | Ok (false, _) ->

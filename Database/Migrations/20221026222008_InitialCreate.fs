@@ -10,7 +10,7 @@ open Microsoft.EntityFrameworkCore.Migrations
 open Microsoft.EntityFrameworkCore.Storage.ValueConversion
 
 [<DbContext(typeof<Connection.MasonDbContext>)>]
-[<Migration("20221025173624_InitialCreate")>]
+[<Migration("20221026222008_InitialCreate")>]
 type InitialCreate() =
     inherit Migration()
 
@@ -24,6 +24,11 @@ type InitialCreate() =
                         nullable = false
                         ,``type`` = "INTEGER"
                     ).Annotation("Sqlite:Autoincrement", true)
+                Name =
+                    table.Column<string>(
+                        nullable = true
+                        ,``type`` = "TEXT"
+                    )
                 Wallet =
                     table.Column<string>(
                         nullable = true
@@ -134,6 +139,11 @@ type InitialCreate() =
                         nullable = true
                         ,``type`` = "TEXT"
                     )
+                VotingId =
+                    table.Column<Guid>(
+                        nullable = true
+                        ,``type`` = "TEXT"
+                    )
                 NftAddress =
                     table.Column<string>(
                         nullable = false
@@ -158,6 +168,13 @@ type InitialCreate() =
                         ,principalColumn = "Id"
                         ) |> ignore
 
+                    table.ForeignKey(
+                        name = "FK_Votes_Votings_VotingId"
+                        ,column = (fun x -> (x.VotingId) :> obj)
+                        ,principalTable = "Votings"
+                        ,principalColumn = "Id"
+                        ) |> ignore
+
                 )
         ) |> ignore
 
@@ -177,6 +194,12 @@ type InitialCreate() =
             name = "IX_Votes_VariantId"
             ,table = "Votes"
             ,column = "VariantId"
+            ) |> ignore
+
+        migrationBuilder.CreateIndex(
+            name = "IX_Votes_VotingId"
+            ,table = "Votes"
+            ,column = "VotingId"
             ) |> ignore
 
         migrationBuilder.CreateIndex(
@@ -213,6 +236,11 @@ type InitialCreate() =
                 .IsRequired(true)
                 .ValueGeneratedOnAdd()
                 .HasColumnType("INTEGER")
+                |> ignore
+
+            b.Property<string option>("Name")
+                .IsRequired(false)
+                .HasColumnType("TEXT")
                 |> ignore
 
             b.Property<string option>("Wallet")
@@ -280,6 +308,11 @@ type InitialCreate() =
                 .HasColumnType("TEXT")
                 |> ignore
 
+            b.Property<Nullable<Guid>>("VotingId")
+                .IsRequired(false)
+                .HasColumnType("TEXT")
+                |> ignore
+
             b.HasKey("Id")
                 |> ignore
 
@@ -289,6 +322,10 @@ type InitialCreate() =
 
 
             b.HasIndex("VariantId")
+                |> ignore
+
+
+            b.HasIndex("VotingId")
                 |> ignore
 
             b.ToTable("Votes") |> ignore
@@ -348,6 +385,10 @@ type InitialCreate() =
             b.HasOne("Database.Connection+Variant", "Variant")
                 .WithMany()
                 .HasForeignKey("VariantId")
+                |> ignore
+            b.HasOne("Database.Connection+Voting", "Voting")
+                .WithMany()
+                .HasForeignKey("VotingId")
                 |> ignore
 
         )) |> ignore

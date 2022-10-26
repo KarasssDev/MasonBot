@@ -22,7 +22,6 @@ module ForMasonHandlers =
         match (matchSimpleCallbackMessage handlingCallback ctx) with
         | Some from ->
             logCallback handlerName from.Id handlingCallback
-
             let user = Querying.getUser from.Id
             match user with
             | Ok (UserTypes.Master _) | Ok (UserTypes.Holder _) ->

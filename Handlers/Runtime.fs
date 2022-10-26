@@ -13,6 +13,8 @@ module Runtime =
         | WaitVotingDescription
         | WaitVotingVariant
         | WaitAcceptVotingCreation
+        // Authorization states
+        // ...
 
     // Authorization
     type AuthorizationInfo = {

@@ -44,6 +44,8 @@ module Querying =
     // Users
     let getAllUsers = DbQuerying.getAllUsers
 
+    let userExist (telegramId: int64) = DbQuerying.userExist telegramId
+
     let getUser (telegramId: int64) =
         result {
             let user = DbQuerying.getUser telegramId
@@ -55,14 +57,14 @@ module Querying =
                 return UserTypes.mkUser user.TelegramId None user.Wallet
         }
 
-    let createUser (telegramId: int64) wallet =
+    let createUser (telegramId: int64) name wallet =
         use ctx = new Connection.MasonDbContext()
         if DbQuerying.userExist telegramId then ()
-        else DbQuerying.createUser ctx telegramId wallet
+        else DbQuerying.createUser ctx telegramId name wallet
 
     let updateUserWallet telegramId wallet =
         use ctx = new Connection.MasonDbContext()
-        let user = DbQuerying.getUser telegramId
+        let user = DbQuerying.getUserFromCtx ctx telegramId
         DbQuerying.updateUserWallet ctx user wallet
 
 
@@ -88,7 +90,7 @@ module Querying =
         let currentDate = DateTime.Now
 
         result {
-            let user = DbQuerying.getUser userId
+            let user = DbQuerying.getUserFromCtx ctx userId
             let variants = DbQuerying.createVariants ctx variantDescriptions
             return DbQuerying.createVoting ctx user description variants currentDate duration
         }
@@ -99,11 +101,18 @@ module Querying =
     let vote userId variantId =
         use ctx = new Connection.MasonDbContext()
         result {
-            let user = DbQuerying.getUser userId
-            let variant = DbQuerying.getVariant variantId
-            let! wallet = user.Wallet |> toApiError // TODO: fix it
+            let user = DbQuerying.getUserFromCtx ctx userId
+            let variant = DbQuerying.getVariantFromCtx ctx variantId
+            let! wallet = user.Wallet |> toApiError
             let! nfts = TonApiQuerying.getNftsAddresses wallet |> toApiError
-            DbQuerying.deleteVotesByNfts ctx variant nfts
-            DbQuerying.createVotes ctx user variant nfts
+            DbQuerying.makeVote ctx user variant nfts
             return ()
         }
+
+    let getVotingResults id =
+        let voting = DbQuerying.getVoting id
+        let results =
+            voting.Variants
+            |> Seq.map (fun v -> v, DbQuerying.getVotes v.Id)
+            |> Seq.map (fun (v, votes) -> v, votes |> Seq.groupBy (fun v -> v.User))
+        (voting, results)

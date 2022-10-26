@@ -7,8 +7,9 @@ open Logging
 
 module DbQuerying =
 
-    // DB caches
-    let private dbCache = { // Migrate to Redis?
+    // Database cache
+    // Cache should be refreshed after modifying the database
+    let private dbCache = {
         Users = ConcurrentDictionary()
         Votings = ConcurrentDictionary()
         Votes = ConcurrentDictionary()
@@ -38,16 +39,15 @@ module DbQuerying =
             Logging.logDebug $"Getting [{key}] from cache [{typeof<'b>.Name}]"
             value
         | false, _ ->
-            Logging.logError$"Key [{key}] not found in cache"
-            failwith $"Key [{key}] not found in cache"
+            failwith $"Key [{key}] not found in cache [{typeof<'b>.Name}]"
 
     let private allFromCache (cache: ConcurrentDictionary<'a, 'b>) =
-        Logging.logDebug $"Getting all from cache [{cache.GetType().Name}]"
+        Logging.logDebug $"Getting all from cache [{typeof<'b>.Name}]"
         cache.Values |> Seq.toList
 
 
 
-    // DB logging
+    // Database logging
     let logDbRequest requestName (args: string list option) =
         Logging.logDebug $"Database process request[{requestName}] with args[{args}]"
     let logDbGet requestName result =
@@ -73,7 +73,7 @@ module DbQuerying =
                 Logging.logDebug $"Exception[{ex.Message}] while proceed transaction[{transactionName}]"
         Logging.logDebug $"Finish transaction[{transactionName}]"
 
-    // Users
+    // Access to cached data
     let getAllUsers () =
         let requestName = "Get all users"
         logDbRequest requestName None
@@ -89,12 +89,67 @@ module DbQuerying =
         logDbRequest requestName <| Some [$"telegramId={telegramId}"]
         fromCache dbCache.Users telegramId
 
-    let createUser (ctx: MasonDbContext) (telegramId: int64) (wallet: string option) =
+    let getAllVotings () =
+        let requestName = "Get all votings"
+        logDbRequest requestName None
+        allFromCache dbCache.Votings
+
+    let getVoting id =
+        let requestName = "Get voting"
+        logDbRequest requestName <| Some [$"id={id}"]
+        fromCache dbCache.Votings id
+
+    let getVariant id  =
+        let requestName = "Get variant"
+        logDbRequest requestName <| Some [$"id={id}"]
+        fromCache dbCache.Variants id
+
+    let getVotes (variantId: Guid) =
+        let requestName = "Get votes"
+        logDbRequest requestName <| Some [$"variantId={variantId}"]
+        allFromCache dbCache.Votes |> List.filter (fun v -> v.Variant.Id = variantId)
+
+    // Access to database data
+    // You should use this for getting data with same context
+    let getUserFromCtx (ctx: MasonDbContext) (telegramId: int64)  =
+        let requestName = "Get user from ctx"
+        logDbRequest requestName <| Some [$"telegramId={telegramId}"]
+        query {
+            for user in ctx.Users do
+            find (user.TelegramId = telegramId)
+        } |> logDbGet requestName
+
+    let getVotingFromCtxByVariantId (ctx: MasonDbContext) id =
+        let requestName = "Get voting from ctx"
+        logDbRequest requestName <| Some [$"id={id}"]
+        ctx.Votings |> Seq.find (fun v -> v.Variants |> Seq.exists (fun va -> va.Id = id)) |> logDbGet requestName
+
+    let getVotesFromCtxByVotingId (ctx: MasonDbContext) (votingId: Guid) =
+        let requestName = "Get votes from ctx"
+        logDbRequest requestName <| Some [$"variantId={votingId}"]
+        query {
+            for vote in ctx.Votes do
+            where (vote.Voting.Id = votingId)
+            select vote
+        } |> Seq.toList |> logDbGet requestName
+
+    let getVariantFromCtx (ctx: MasonDbContext) (id: Guid)  =
+        let requestName = "Get variant from ctx"
+        logDbRequest requestName <| Some [$"id={id}"]
+        query {
+            for variant in ctx.Variants do
+            find (variant.Id = id)
+        } |> logDbGet requestName
+
+    // Modify database data
+    // Don't use functions which access to cache here
+    let createUser (ctx: MasonDbContext) (telegramId: int64) (name: string option) (wallet: string option) =
         let requestName = "Get user"
         logDbRequest requestName <| Some [$"telegramId={telegramId}"; $"wallet={wallet}"]
         let user: User = {
             TelegramId = telegramId
             Wallet = wallet
+            Name = name
         }
         ctx.Users.Add user |> logDbCreate requestName
         ctx.SaveChanges() |> ignore
@@ -108,17 +163,6 @@ module DbQuerying =
         ctx.Entry(user).CurrentValues.SetValues(newUser)
         ctx.SaveChanges() |> ignore
         refreshCache dbCache.Users (fun () -> ctx.Users |> Seq.map (fun u -> u.TelegramId, u) |> List.ofSeq)
-
-    // Votings
-    let getAllVotings () =
-        let requestName = "Get all votings"
-        logDbRequest requestName None
-        allFromCache dbCache.Votings
-
-    let getVoting id =
-        let requestName = "Get voting"
-        logDbRequest requestName <| Some [$"id={id}"]
-        fromCache dbCache.Votings id
 
     let createVoting
         (ctx: MasonDbContext)
@@ -146,7 +190,6 @@ module DbQuerying =
         ctx.SaveChanges() |> ignore
         refreshCache dbCache.Votings (fun () -> ctx.Votings |> Seq.map (fun v -> v.Id, v) |> List.ofSeq)
 
-    // Variants
     let createVariants (ctx: MasonDbContext) (descriptions: string seq) =
         let requestName = "Create variants"
         logDbRequest requestName <| Some [$"descriptions={Seq.toList descriptions}"]
@@ -161,18 +204,16 @@ module DbQuerying =
         refreshCache dbCache.Variants (fun () -> ctx.Variants |> Seq.map (fun v -> v.Id, v) |> List.ofSeq)
         variants
 
-    let getVariant id  =
-        let requestName = "Get variant"
-        logDbRequest requestName <| Some [$"id={id}"]
-        fromCache dbCache.Variants id
+    let private deleteVotesByNftsUnsafe (ctx: MasonDbContext) (voting: Voting) (nfts: string seq) =
+        let requestName = "Delete votes"
+        logDbRequest requestName <| Some [$"nfts={Seq.toList nfts}"]
+        let votes = getVotesFromCtxByVotingId ctx voting.Id
+        List.iter (fun vote ->
+            if nfts |> Seq.contains vote.NftAddress then
+                ctx.Votes.Remove vote |> logDbDelete requestName
+        ) votes
 
-    // Votes
-    let getVotes (variant: Variant) =
-        let requestName = "Get votes"
-        logDbRequest requestName <| Some [$"variant={variant}"]
-        allFromCache dbCache.Votes |> List.filter (fun v -> v.Variant.Id = variant.Id)
-
-    let createVotes (ctx: MasonDbContext) (user: User) (variant: Variant) (nfts: string seq) =
+    let private createVotesUnsafe (ctx: MasonDbContext) (user: User) (voting: Voting) (variant: Variant) (nfts: string seq) =
         let requestName = "Create votes"
         logDbRequest requestName <| Some [$"variant={variant}"; $"nfts={Seq.toList nfts}"]
         Seq.iter (fun nft ->
@@ -180,31 +221,18 @@ module DbQuerying =
                 Id = Guid.NewGuid()
                 User = user
                 Variant = variant
+                Voting = voting
                 NftAddress = nft
             } |> logDbCreate requestName
         ) nfts
-        ctx.SaveChanges() |> ignore
-        refreshCache dbCache.Votes (fun () -> ctx.Votes |> Seq.map (fun v -> v.Id, v) |> List.ofSeq)
 
-    let deleteAllVotes (ctx: MasonDbContext) (variant: Variant) =
-        let requestName = "Delete all votes"
-        logDbRequest requestName <| Some [$"variant={variant}"]
-        let votes = getVotes variant
-        List.iter (fun vote ->
-            ctx.Votes.Remove vote |> logDbDelete requestName
-        ) votes
-        ctx.SaveChanges() |> ignore
-        refreshCache dbCache.Votes (fun () -> ctx.Votes |> Seq.map (fun v -> v.Id, v) |> List.ofSeq)
-
-    let deleteVotesByNfts (ctx: MasonDbContext) (variant: Variant) (nfts: string seq) =
-        let requestName = "Delete votes"
-        logDbRequest requestName <| Some [$"nfts={Seq.toList nfts}"]
-        let variant = getVariant variant.Id
-        let votes = getVotes variant
-        List.iter (fun vote ->
-            if nfts |> Seq.contains vote.NftAddress then
-                ctx.Votes.Remove vote |> logDbDelete requestName
-        ) votes
-        ctx.SaveChanges() |> ignore
-        refreshCache dbCache.Votes (fun () -> ctx.Votes |> Seq.map (fun v -> v.Id, v) |> List.ofSeq)
-
+    let makeVote (ctx: MasonDbContext) (user: User) (variant: Variant) (nfts: string seq) =
+        let requestName = "Make vote"
+        logDbRequest requestName <| Some [$"user={user}"; $"variant={variant}"; $"nft={nfts}"]
+        let voting = getVotingFromCtxByVariantId ctx variant.Id
+        mkTransaction ctx requestName (fun () ->
+            deleteVotesByNftsUnsafe ctx voting nfts
+            createVotesUnsafe ctx user voting variant nfts
+            ctx.SaveChanges() |> ignore
+            refreshCache dbCache.Votes (fun () -> ctx.Votes |> Seq.map (fun v -> v.Id, v) |> List.ofSeq)
+        )

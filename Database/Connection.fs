@@ -12,6 +12,7 @@ module Connection =
     [<CLIMutable>]
     type User = {
         [<Key>] TelegramId: int64
+        Name: string option
         Wallet: string option
     }
 
@@ -34,6 +35,7 @@ module Connection =
         [<Key>] Id: Guid
         User: User
         Variant: Variant
+        Voting: Voting
         NftAddress: string
     }
 
@@ -69,11 +71,12 @@ module Connection =
 
         override _.OnConfiguring(options: DbContextOptionsBuilder) : unit =
             #if DEBUG
-            Paths.configureDataPath ""
+            Paths.configureDataPath "/home/viktor/RiderProjects/MasonBot/data/"
             #endif
             Logging.Logging.logDebug $"Database path: {Paths.databasePath()}"
             options
-                //.LogTo(Action<string> (fun x -> printfn $"{x}"))
+                // Uncomment this to watching SQL queries
+                .LogTo(Action<string> (fun x -> printfn $"{x}"))
                 .UseSqlite($"Data Source={Paths.databasePath()}")
                 .UseFSharpTypes() |> ignore
 

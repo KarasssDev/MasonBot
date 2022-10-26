@@ -18,12 +18,10 @@ module StaticContentHandlers =
 
         match (matchTextMessage handlingText ctx) with
         | Some chat ->
-            Querying.createUser chat.Id None
             logMessage handlerName chat.Id handlingText
-            let user = Querying.getUser chat.Id
-            match user with
-            | Error Querying.UserNotFound -> Querying.createUser chat.Id None
-            | _ -> ()
+
+            if Querying.userExist chat.Id |> not
+            then Querying.createUser chat.Id chat.Username None
 
             sendMessage chat.Id
             <| (welcomeMessage, ParseMode.Markdown)

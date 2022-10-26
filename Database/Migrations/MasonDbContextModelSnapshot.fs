@@ -24,6 +24,11 @@ type MasonDbContextModelSnapshot() =
                 .HasColumnType("INTEGER")
                 |> ignore
 
+            b.Property<string option>("Name")
+                .IsRequired(false)
+                .HasColumnType("TEXT")
+                |> ignore
+
             b.Property<string option>("Wallet")
                 .IsRequired(false)
                 .HasColumnType("TEXT")
@@ -89,6 +94,11 @@ type MasonDbContextModelSnapshot() =
                 .HasColumnType("TEXT")
                 |> ignore
 
+            b.Property<Nullable<Guid>>("VotingId")
+                .IsRequired(false)
+                .HasColumnType("TEXT")
+                |> ignore
+
             b.HasKey("Id")
                 |> ignore
 
@@ -98,6 +108,10 @@ type MasonDbContextModelSnapshot() =
 
 
             b.HasIndex("VariantId")
+                |> ignore
+
+
+            b.HasIndex("VotingId")
                 |> ignore
 
             b.ToTable("Votes") |> ignore
@@ -157,6 +171,10 @@ type MasonDbContextModelSnapshot() =
             b.HasOne("Database.Connection+Variant", "Variant")
                 .WithMany()
                 .HasForeignKey("VariantId")
+                |> ignore
+            b.HasOne("Database.Connection+Voting", "Voting")
+                .WithMany()
+                .HasForeignKey("VotingId")
                 |> ignore
 
         )) |> ignore

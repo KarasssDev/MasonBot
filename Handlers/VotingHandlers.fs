@@ -1,5 +1,6 @@
 namespace Handlers
 
+open Database
 open Funogram.Telegram.Bot
 open Funogram.Telegram.Types
 
@@ -8,7 +9,7 @@ open Handlers.Callback
 open Handlers.Content
 open MasonCore
 
-module VotingHandlers = // TODO
+module VotingHandlers =
 
     let handleVoting(ctx: UpdateContext) =
 
@@ -18,7 +19,6 @@ module VotingHandlers = // TODO
         match (matchSimpleCallbackMessage handlingCallback ctx) with
         | Some from ->
             logCallback handlerName from.Id handlingCallback
-
             let user = Querying.getUser from.Id
             match user with
             | Ok (UserTypes.Master _) | Ok (UserTypes.Holder _) ->
@@ -51,7 +51,6 @@ module VotingHandlers = // TODO
         match (matchSimpleCallbackMessage handlingCallback ctx) with
         | Some from ->
             logCallback handlerName from.Id handlingCallback
-
             let user = Querying.getUser from.Id
             match user with
             | Ok (UserTypes.Master _) ->
@@ -90,7 +89,6 @@ module VotingHandlers = // TODO
         match (matchStateWithSimpleCallback Runtime.WaitChooseVotingType handlingCallback ctx) with
         | Some from ->
             logCallback handlerName from.Id handlingCallback
-
             let user = Querying.getUser from.Id
             match user with
             | Ok (UserTypes.Master _) ->
@@ -194,7 +192,7 @@ module VotingHandlers = // TODO
             let user = Querying.getUser chat.Id
             match user with
             | Ok (UserTypes.Master _) ->
-                match description with
+                match description with // TODO: keyboard here
                 | "Готово" ->
                     Runtime.setState chat.Id Runtime.WaitAcceptVotingCreation
                     sendMessage chat.Id
@@ -352,8 +350,19 @@ module VotingHandlers = // TODO
 
         let handlerName = "Show voting"
 
-        let renderMessage id = "Результаты тут"
-
+        let renderMessage id =
+            let voting, results = Querying.getVotingResults id
+            results
+            |> Seq.toList
+            |> List.mapi (
+                fun i (variant, votes) ->
+                    $"[{i + 1}] Суммарно за:"
+                    + $"{votes |> Seq.sumBy (fun (_, x) -> Seq.length x)}\n"
+                    + $"Вариант: {variant.Description}\n"
+                    + (votes |> Seq.fold (fun st (holder, votes) -> st + $"@{holder.TelegramId} - {Seq.length votes}\n") "")
+            )
+            |> String.concat "\n\n"
+            |> (fun x -> $"Голосование: {voting.Description}\n\n{x}")
 
         let renderKeyboard id =
             createInlineKeyboard [|
