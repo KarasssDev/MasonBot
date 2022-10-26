@@ -32,9 +32,6 @@ See the [open issues](https://github.com/KarasssDev/MasonBot/issues) for a full 
 
 
 ## Contributing
-See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
-Don't forget to give the project a star! Thanks again!
-
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
