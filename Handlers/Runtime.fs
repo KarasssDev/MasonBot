@@ -13,6 +13,7 @@ module Runtime =
         | WaitVotingDescription
         | WaitVotingVariant
         | WaitAcceptVotingCreation
+        | StartedAuthorization
         // Authorization states
         // ...
 
@@ -74,7 +75,11 @@ module Runtime =
     let discardState id = update id (fun x -> { x with state = None })
 
     // Authorization helpers
-    let disableAuthorization id = update id <| fun i -> {i with authorizationInfo = None}
+    let enableAuthorization id = setState id StartedAuthorization
+    
+    let disableAuthorization id =
+        update id <| fun i -> {i with authorizationInfo = None}
+        discardState id
 
     // Voting helpers
     let enableVotingCreating id = update id <| fun i -> { i with voteCreatingInfo = Some { votingType = None; description = None; variants = [] }}
