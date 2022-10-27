@@ -95,7 +95,7 @@ module VotingHandlers =
                 Runtime.setVotingType from.Id votingType
                 Runtime.setState from.Id Runtime.WaitVotingDescription
                 sendMessage from.Id
-                <| ("TODO message", ParseMode.Markdown)
+                <| ("TODO: просьба отправить описание голосования", ParseMode.Markdown)
                 <| None
                 <| None
                 <| ctx.Config
@@ -139,13 +139,13 @@ module VotingHandlers =
                     Runtime.setVotingDescription chat.Id description
                     Runtime.setState chat.Id Runtime.WaitVotingVariant
                     sendMessage chat.Id
-                    <| ("Отправь описание первого варианта", ParseMode.Markdown)
+                    <| ("TODO: Отправь описание первого варианта", ParseMode.Markdown)
                     <| None
                     <| None
                     <| ctx.Config
                 else
                     sendMessage chat.Id
-                    <| ("Описание голосования говно", ParseMode.Markdown)
+                    <| ("TODO: Описание голосования некорректно", ParseMode.Markdown)
                     <| None
                     <| None
                     <| ctx.Config
@@ -183,7 +183,7 @@ module VotingHandlers =
                     |> List.mapi (fun i d -> $"[{i + 1}] {d}")
                     |> String.concat "\n"
                 $"Тип голосования: {votingTypeText}\nОписание: {description}\nВарианты:\n{variantsText}"
-            | _ -> "Что-то пошло не так..." // TODO
+            | r -> failwith $"Inconsistent runtime {r}"
 
         match (matchStateWithTextMessage Runtime.WaitVotingVariant ctx) with
         | Some (chat, description) ->
@@ -192,7 +192,7 @@ module VotingHandlers =
             let user = Querying.getUser chat.Id
             match user with
             | Ok (UserTypes.Master _) ->
-                match description with // TODO: keyboard here
+                match description with
                 | "Готово" ->
                     Runtime.setState chat.Id Runtime.WaitAcceptVotingCreation
                     sendMessage chat.Id
@@ -210,7 +210,7 @@ module VotingHandlers =
                         <| ctx.Config
                     else
                         sendMessage chat.Id
-                        <| ("Описание варианта говно, попробуй еще раз", ParseMode.Markdown)
+                        <| ("TODO: Описание варианта некорректно, попробуй еще раз", ParseMode.Markdown)
                         <| None
                         <| None
                         <| ctx.Config
@@ -247,7 +247,7 @@ module VotingHandlers =
                 match votingType with
                 | Runtime.Default -> (false, description, variants)
                 | Runtime.Important -> (true, description, variants)
-            | _ -> failwith "TODO: error message" // TODO
+            | r -> failwith $"Inconsistent runtime {r}"
 
         match (matchStateWithSimpleCallback Runtime.WaitAcceptVotingCreation handlingCallback ctx) with
         | Some from ->
@@ -356,13 +356,14 @@ module VotingHandlers =
             |> Seq.toList
             |> List.mapi (
                 fun i (variant, votes) ->
-                    $"[{i + 1}] Суммарно за:"
+                    $"[{i + 1}] Суммарно за: "
                     + $"{votes |> Seq.sumBy (fun (_, x) -> Seq.length x)}\n"
                     + $"Вариант: {variant.Description}\n"
+                    + "Проголосовали:"
                     + (votes |> Seq.fold (fun st (holder, votes) -> st + $"@{holder.TelegramId} - {Seq.length votes}\n") "")
             )
             |> String.concat "\n\n"
-            |> (fun x -> $"Голосование: {voting.Description}\n\n{x}")
+            |> (fun x -> $"Описание голосования: {voting.Description}\n\n{x}")
 
         let renderKeyboard id =
             createInlineKeyboard [|

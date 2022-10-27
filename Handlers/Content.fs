@@ -11,6 +11,7 @@ module Content =
 
     module Text =
         let eyeEmoji = "👁"
+        let boomEmoji = "💥"
         let infoEmoji = "ℹ️"
         let lockKeyEmoji = "🔐 "
         let leftArrowEmoji = "⬅️"

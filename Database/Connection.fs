@@ -71,12 +71,12 @@ module Connection =
 
         override _.OnConfiguring(options: DbContextOptionsBuilder) : unit =
             #if DEBUG
-            Paths.configureDataPath "/home/viktor/RiderProjects/MasonBot/data/"
+            Paths.configureDataPath ""
             #endif
             Logging.Logging.logDebug $"Database path: {Paths.databasePath()}"
             options
                 // Uncomment this to watching SQL queries
-                .LogTo(Action<string> (fun x -> printfn $"{x}"))
+                //.LogTo(Action<string> (fun x -> printfn $"{x}"))
                 .UseSqlite($"Data Source={Paths.databasePath()}")
                 .UseFSharpTypes() |> ignore
 

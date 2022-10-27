@@ -70,7 +70,7 @@ module DbQuerying =
         with
             | :? Exception as ex ->
                 transaction.RollbackToSavepoint("Savepoint")
-                Logging.logDebug $"Exception[{ex.Message}] while proceed transaction[{transactionName}]"
+                Logging.logError $"Exception[{ex.Message}] while proceed transaction[{transactionName}]"
         Logging.logDebug $"Finish transaction[{transactionName}]"
 
     // Access to cached data

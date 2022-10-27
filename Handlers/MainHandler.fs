@@ -37,9 +37,9 @@ module MainHandler =
             | Basic.Success -> ()
             | Basic.Fail ->
                 match ctx.Update.Message with
-                | Some m -> Logging.logError $"Unhandled message\n {m}"
+                | Some m -> Logging.logWarning $"Unhandled message\n {m}"
                 | None -> ()
                 match ctx.Update.CallbackQuery with
-                | Some c -> Logging.logError $"Unhandled callback\n {c.Data}"
+                | Some c -> Logging.logWarning $"Unhandled callback\n {c.Data}"
                 | None -> ()
-        with ex -> Logging.logError $"Unhandled exception {ex.Message}, {ex.StackTrace}"
+        with ex -> Logging.logError $"Unhandled exception {ex.Message}\n {ex.StackTrace}"
