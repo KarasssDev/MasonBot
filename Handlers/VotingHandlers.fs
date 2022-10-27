@@ -359,11 +359,15 @@ module VotingHandlers =
                     $"[{i + 1}] Суммарно за: "
                     + $"{votes |> Seq.sumBy (fun (_, x) -> Seq.length x)}\n"
                     + $"Вариант: {variant.Description}\n"
-                    + "Проголосовали:"
-                    + (votes |> Seq.fold (fun st (holder, votes) -> st + $"@{holder.TelegramId} - {Seq.length votes}\n") "")
+                    + "Проголосовали:\n"
+                    + (votes |> Seq.fold (fun st (holder, votes) -> st + $"""{if holder.Name.IsSome then $"@{holder.Name.Value}" else $"{holder.TelegramId}"} - {Seq.length votes}\n""") "")
             )
             |> String.concat "\n\n"
-            |> (fun x -> $"Описание голосования: {voting.Description}\n\n{x}")
+            |> (fun x ->
+                $"Описание голосования: {voting.Description}"
+                + $"Дата окончания: {voting.StartDate + voting.Duration}"
+                + $"\n\n{x}"
+            )
 
         let renderKeyboard id =
             createInlineKeyboard [|
@@ -417,13 +421,24 @@ module VotingHandlers =
             logCallback handlerName us.Id ShowVotings
 
             let user = Querying.getUser us.Id
+            let voting = Querying.getVoting guid
+
+            let votingFinished = voting.StartDate + voting.Duration > System.DateTime.Now
+
             match user with
             | Ok (UserTypes.Master _) | Ok (UserTypes.Holder _) ->
-                sendMessage us.Id
-                <| (renderMessage guid, ParseMode.Markdown)
-                <| None
-                <| Some (renderKeyboard guid)
-                <| ctx.Config
+                if votingFinished then
+                    sendMessage us.Id
+                    <| ("Голосование завершено", ParseMode.Markdown)
+                    <| None
+                    <| Some Keyboard.votingKeyboard
+                    <| ctx.Config
+                else
+                    sendMessage us.Id
+                    <| (renderMessage guid, ParseMode.Markdown)
+                    <| None
+                    <| Some (renderKeyboard guid)
+                    <| ctx.Config
             | Ok _ ->
                 sendMessage us.Id
                 <| (Text.accessDeniedHolder, ParseMode.Markdown)
@@ -450,6 +465,7 @@ module VotingHandlers =
             logCallback handlerName us.Id ShowVotings
 
             let user = Querying.getUser us.Id
+
             match user with
             | Ok (UserTypes.Master _) | Ok (UserTypes.Holder _) ->
                 match Querying.vote us.Id guid with
