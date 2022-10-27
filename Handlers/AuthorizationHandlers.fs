@@ -15,7 +15,7 @@ open Logging
 open MasonCore
 open TonApi
 
-module AuthorizationHandlers = // TODO unhardcodig + пееписать на State
+module AuthorizationHandlers = // TODO unhardcodig
 
     let private AUTH_SUM = 10000000UL
     let private authorizationStartMessage =
@@ -88,7 +88,8 @@ module AuthorizationHandlers = // TODO unhardcodig + пееписать на Sta
                 <| None
                 <| None
                 <| ctx.Config
-
+                
+                Runtime.enableAuthorization from.Id
                 Logging.logDebug $"[{from.Id}] got authorization message: [{mes}]"
             | Error err ->
                 let mes = defaultHandleQueryingError err
@@ -108,47 +109,38 @@ module AuthorizationHandlers = // TODO unhardcodig + пееписать на Sta
             HandlingResult.Success
         | None -> HandlingResult.Fail
 
-    let handleAuthorizationVerification(ctx: UpdateContext) = // TODO: нормальные логи
-        let handlingCallback = AuthorizationVerification // мы не хендлим тут callback, а просто проверяем, что это сообщение
-        let handlerName = "AuthorizationVerification"
-        match (matchAnyMessage ctx) with
-        | Some from, Some hash ->
-            if (from.Id
-                |> Runtime.getOrDefault
-                |> fun x -> x.authorizationInfo.IsNone
-                ) then
-                HandlingResult.Fail
-            else
-                Logging.logDebug $"[{from.Id}] is verifying wallet with transaction hash [{hash}]"
-                logCallback handlerName from.Id handlingCallback // Тут, соответственно, мы логируем, что это сообщение, а не callback
-                let info = Runtime.getOrDefault from.Id
-                let mes = info.authorizationInfo.Value.message.Trim()
+    let handleAuthorizationVerification(ctx: UpdateContext) =
+        let handlingCallback = AuthorizationVerification
+        
+        match (matchStateWithTextMessage Runtime.StartedAuthorization ctx) with
+        | Some (from, hash) ->
+            Logging.logDebug $"[{from.Id}] is verifying wallet with transaction hash [{hash}]"
+            logMessage handlingCallback from.Id hash
+            let info = Runtime.getOrDefault from.Id
+            let mes = info.authorizationInfo.Value.message.Trim()
 
-                let ansMes =
-                    match Querying.verifyTransaction mes AUTH_SUM hash with
-                    | Ok (true, wallet) ->
-                        Querying.updateUserWallet from.Id wallet
-                        "Вы успешно авторизовались!"
+            let ansMes =
+                match Querying.verifyTransaction mes AUTH_SUM hash with
+                | Ok (true, wallet) ->
+                    Querying.updateUserWallet from.Id wallet
+                    "Вы успешно авторизовались!"
 
-                    | Ok (false, _) ->
-                        Logging.logDebug $"[{from.Id}] typed invalid transaction with hash [{hash}]"
-                        "Указанная транзакция не соответствует запрашиваемой, проверьте адресата или указанное сообщение"
-                    | Error err ->
-                        let mes = defaultHandleQueryingError err
-                        Logging.logError $"Verification API error: [{from.Id}] with [{mes}]"
-                        "Ошибка сервера авторизации. Возможно, вы ввели неверный идентификатор транзакции"
+                | Ok (false, _) ->
+                    Logging.logDebug $"[{from.Id}] typed invalid transaction with hash [{hash}]"
+                    "Указанная транзакция не соответствует запрашиваемой, проверьте адресата или указанное сообщение"
+                | Error err ->
+                    let mes = defaultHandleQueryingError err
+                    Logging.logError $"Verification API error: [{from.Id}] with [{mes}]"
+                    "Ошибка сервера авторизации. Возможно, вы ввели неверный идентификатор транзакции"
 
-                sendMessage from.Id
-                <| (ansMes, ParseMode.Markdown)
-                <| None
-                <| Some Keyboard.authKeyboard
-                <| ctx.Config
-
-                Runtime.disableAuthorization from.Id
-                HandlingResult.Success
-        | Some from, None ->
+            sendMessage from.Id
+            <| (ansMes, ParseMode.Markdown)
+            <| None
+            <| Some Keyboard.authKeyboard
+            <| ctx.Config
+            
             Runtime.disableAuthorization from.Id
-            HandlingResult.Fail
+            HandlingResult.Success
         | _ ->
             HandlingResult.Fail
 
