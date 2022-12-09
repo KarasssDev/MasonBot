@@ -17,15 +17,15 @@ module Program =
         Logging.configureLogLevel Logging.Debug
         #endif
 
-        #if RELEASE
-        Logging.configureWriter Content.logFileWriter
-        Logging.configureLogLevel Logging.Debug
-        #endif
-
         let contentUploaded = Content.uploadStaticContent()
         let contentExist = Content.checkDynamicContentExist()
         let readyToStart = contentUploaded && contentExist
 
+        #if RELEASE
+        Logging.configureWriter Content.logFileWriter
+        Logging.configureLogLevel Logging.Debug
+        #endif
+        
         if readyToStart then
             Database.DbQuerying.initCaches ()
             Logging.logInfo "Bot started"
